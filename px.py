@@ -1,16 +1,16 @@
-import neopixel, time, machine, math, random
+import time, machine, math, random
 
 class Pixels:
     def __init__(self, pin = 14, numLed = 60):
         self.pin = pin
         self.led = numLed
-        self.strip = neopixel.NeoPixel(machine.Pin(self.pin), self.led)
+        self.strip = machine.Neopixel(machine.Pin(self.pin), self.led, 0)
         self.fact_cache = {}
         self.threecolors = {"#00173d", "#f75002", "#01f2f7"}
 
         #for fire function
-        self.w, self.h = 3, int(self.strip.n/2)
-        self.oldColor = [[ 0x00 for x in range (self.w)] for y in range(self.h)]
+        self.w, self.h = 3, int(self.led/2)
+        #self.oldColor = [[ 0x00 for x in range (self.w)] for y in range(self.h)]
 
     # For Rainbow Input a value 0 to 255 to get a color value.
     # The colours are a transition r - g - b - back to r.
@@ -30,8 +30,8 @@ class Pixels:
         while True:
             for j in range (256*5): #5 cycles of all colors on wheel
                 for i in range (0, 60):
-                    self.strip[i] = self.Wheel((int(i * 256 / self.strip.n)+j ) & 255)
-                self.strip.write()
+                    self.strip.set(i, self.Wheel((int(i * 256 / self.led)+j ) & 255))
+                self.strip.show()
                 time.sleep(wait)
 
     # --------colorGradient + dependencies -------------
@@ -70,7 +70,7 @@ class Pixels:
         if colors is None:
             colors=self.threecolors
         if n_out is None:
-            n_out = self.strip.n
+            n_out = self.led
 
         # RGB vectors for each color, use as control points
         RGB_list = [self.hex_to_RGB(color) for color in colors]
@@ -98,10 +98,10 @@ class Pixels:
             for t in range(n_out)
         ]
         for n in range(len(gradient)):
-            self.strip[n] = self.RGB_to_touple(gradient[n])
-            self.strip[(self.strip.n-1-n)] = self.RGB_to_touple(gradient[n])
+            self.strip.set(n, self.RGB_to_touple(gradient[n]))
+            self.strip.set((self.led-1-n), self.RGB_to_touple(gradient[n]))
 
-        self.strip.write()
+        self.strip.show()
         # Return all points requested for gradient
         return {
             "gradient": self.color_dict(gradient),
@@ -111,8 +111,8 @@ class Pixels:
 
     # ------------ fire --------------------
     def fire(self):
-        #w, h = 3, self.strip.n
-        heat = [0x00 for x in range(int(self.strip.n), 0, -1)]
+        #w, h = 3, self.led
+        heat = [0x00 for x in range(int(self.led/2), 0, -1)]
         print("got heat array")
 
         cooling, sparkling, speedDelay = 180, 120, 0.015
@@ -121,8 +121,8 @@ class Pixels:
         cooldown = 0
 
         # Step 1: cool down every cell a little
-        for i in range(int(self.strip.n)):
-            cooldown = random.randint(0, int((cooling * 10) / int(self.strip.n)) +2)
+        for i in range(int(self.led/2)):
+            cooldown = random.randint(0, int((cooling * 10) / int(self.led)) +2)
 
             if (cooldown > heat[i]):
                 heat[i] = 0
@@ -132,7 +132,7 @@ class Pixels:
 
 
         # Step 2: Heat from each cell drifts
-        for k in range(int(self.strip.n/2)-1, 1, -1):
+        for k in range(int(self.led/2)-1, 1, -1):
             heat[k] = (heat[k-1] +  heat[k-2] + heat[k-2]) / 3
         print("got 2nd loop array")
 
@@ -143,10 +143,11 @@ class Pixels:
             heat[y] = heat[y] + random.randint(160, 255)
 
         # Step 4 convert heat to led colours
-        for j in range(self.strip.n/2):
-            self.setPixelHeatColor(j, heat[j])
-            #self.setPixelHeatColor(int(self.strip.n/2)-j, heat[j])
-        self.strip.write()
+        for j in range(int(self.led/2)):
+            #self.setPixelHeatColor(j, heat[j])
+            self.setPixelHeatColor(int(self.led/2)-j, heat[j])
+            self.setPixelHeatColor(int(self.led/2)+j, heat[j])
+        self.strip.show()
         time.sleep(speedDelay)
 
     def setPixelHeatColor(self, pixel, temp):
@@ -159,14 +160,14 @@ class Pixels:
 
         #figure out which third of the spectrum we're in
         if (ht > 0x80):             #hottest
-            self.strip[pixel] = (255, 255, heatramp)
+            self.strip.set(pixel,  (255, 255, heatramp))
         elif ( ht > 0x40):          #middle
-            self.strip[pixel] = (255, heatramp, 0)
+            self.strip.set(pixel,  (255, heatramp, 0))
         else:                       #coolest
-            self.strip[pixel] = (heatramp, 0, 0)
+            self.strip.set(pixel,  (heatramp, 0, 0))
     # --------------fire - end -----------------------
 
-    
+
     # ------------converting values
     def hex_to_RGB(self, hex):
         ''' "#FFFFFF" -> [255,255,255] '''
@@ -187,6 +188,6 @@ class Pixels:
 
     #turn off all pixels
     def off(self):
-        for i in range (self.strip.n):
-            self.strip[i] = (0,0,0)
-        self.strip.write()
+        for i in range (self.led):
+            self.strip.set(i, (0,0,0))
+        self.strip.show()

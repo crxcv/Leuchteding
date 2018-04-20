@@ -1,37 +1,26 @@
 # Begin configuration
-TITLE    = "Air conditioner"
-STA_SSID = "your-ssid"
-STA_PSK  = "your-pw"
-GPIO_NUM = 5
+TITLE    = "RainbowWarrior"
+
 # End configuration
 
-import network
-import machine
+#import network
+#import machine
 import usocket
 import px
+import connectSTA_AP
 
-#STA_SSID = home.getSsid()
-#STA_PSK = home.getPass()
-
-ap_if = network.WLAN(network.AP_IF)
-if ap_if.active(): ap_if.active(False)
-sta_if = network.WLAN(network.STA_IF)
-if not ap_if.active(): sta_if.active(True)
-if not sta_if.isconnected(): sta_if.connect(STA_SSID, STA_PSK)
+#connect in station mode if possible, else creates access point
+connectSTA_AP.connect()
 
 
-px = px.Pixels()
+
+px = px.Pixels(pin = 14, numLed = 60)
 
 def start(socket, query):
     socket.write("HTTP/1.1 OK\r\n\r\n")
     html = open('index.html', 'rb')
     socket.write(html.read())
 
-
-########----no need for that
-pin = machine.Pin(GPIO_NUM)
-pin.init(pin.OUT)
-pin.value(0)
 
 def err(socket, code, message):
     socket.write("HTTP/1.1 "+code+" "+message+"\r\n\r\n")
@@ -66,6 +55,7 @@ def handle(socket):
                 px.bezier_gradient()
             elif "Fire" in query:
                 px.fire()
+                #print("Fire")
             elif "Off" in query:
                 px.off()
         else:
