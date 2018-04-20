@@ -1,23 +1,87 @@
 <!DOCTYPE html>
-<html>
+<html class="h-100">
+
 <head>
-<title>RainbowWarriorSettins</title>
+  <title>RainbowWarriorSettins</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link rel="stylesheet" href="./style.css">
 </head>
+
 <body>
 
-<h1>RainbowWarrior</h1>
-</br>
-<p>
-<form methon="GET" action="/light?">
-  Select Color Pattern:</br></br>
-  <input type="radio" id="light1" name="light" value="RainbowCycle">RainbowCycle</br>
-  <input type="radio" id="light2" name="light" value="Fire">Fire</br>
-  <input type="radio" id="light3" name="light" value="MeteorRain">MeteorRain</br>
-  <input type="radio" id="light4" name="light" value="ColorGradient">ColorGradient</br>
-  <input type="radio" id="light5" name="light" value="Off">Turn LEDs off</br></br>
-  <input type="submit" name="li" value="submitColor"></b></br>
-  </form>
-</p>
+  <h1>RainbowWarrior</h1>
+  </br>
+  <p>
+    <form methon="GET" action="/light?">
+      Select Color Pattern:</br>
+      </br>
+      <input type="radio" id="light1" name="light" value="RainbowCycle">RainbowCycle</br>
+      <input type="radio" id="light2" name="light" value="Fire">Fire</br>
+      <input type="radio" id="light3" name="light" value="MeteorRain">MeteorRain</br>
+      <input type="radio" id="light4" name="light" value="ColorGradient">ColorGradient</br>
+      <input type="radio" id="light5" name="light" value="Off">Turn LEDs off</br>
+      </br>
+      <input type="submit" name="li" value="submitColor"></b>
+      </br>
+    </form>
+  </p>
 
-</body>
+  <body class="h-100">
+    <div class="ground"></div>
+    <div class="sky">
+      <div class="cloud variant-1"></div>
+      <div class="cloud variant-2"></div>
+      <div class="cloud variant-3"></div>
+      <div class="cloud variant-4"></div>
+      <div class="cloud variant-5"></div>
+    </div>
+    <div class="rainbow-preloader">
+      <div class="rainbow-stripe"></div>
+      <div class="rainbow-stripe"></div>
+      <div class="rainbow-stripe"></div>
+      <div class="rainbow-stripe"></div>
+      <div class="rainbow-stripe"></div>
+      <div class="shadow"></div>
+      <div class="shadow"></div>
+    </div>
+
+    <div class="text-white align-items-center container d-flex flex-column h-100 justify-content-end pb-md-5">
+      <h1 class="">RainbowWarrior</h1>
+      <div class="mt-3">
+
+        <form methon="GET" action="/light?">
+          <h3 class="mb-3">Select Color Pattern:</h3>
+
+          <div class="form-check">
+            <label class="form-check-label"><input class="form-check-input" type="radio" id="light1" name="light" value="RainbowCycle">RainbowCycle</label>
+          </div>
+
+          <div class="form-check">
+            <label class="form-check-label"><input class="form-check-input" type="radio" id="light2" name="light" value="Fire">Fire</label>
+          </div>
+
+          <div class="form-check">
+            <label class="form-check-label"><input class="form-check-input" type="radio" id="light3" name="light" value="MeteorRain">MeteorRain</label>
+          </div>
+
+          <div class="form-check">
+            <label class="form-check-label"><input class="form-check-input" type="radio" id="light4" name="light" value="ColorGradient">ColorGradient</label>
+          </div>
+
+          <div class="form-check">
+            <label class="form-check-label"><input class="form-check-input" type="radio" id="light5" name="light" value="Off">Turn LEDs off</label>
+          </div>
+
+          <div class="my-4">
+            <input class="btn btn-primary" type="submit" name="li" value="Submit color"></b>
+          </div>
+        </form>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  </body>
+
 </html>
