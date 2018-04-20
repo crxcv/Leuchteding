@@ -6,15 +6,13 @@ TITLE    = "RainbowWarrior"
 #import network
 #import machine
 import usocket
-import px
+import px as px
 import connectSTA_AP
 
 #connect in station mode if possible, else creates access point
 connectSTA_AP.connect()
 
-
-
-px = px.Pixels(pin = 14, numLed = 60)
+#px = px.Pixels(pin = 14, numLed = 60)
 
 def start(socket, query):
     socket.write("HTTP/1.1 OK\r\n\r\n")
@@ -45,7 +43,6 @@ def handle(socket):
     elif method == b"GET":
         if path == b"/":
             start(socket, query)
-            #ok(socket, query)
         elif path == b"/light":
             start(socket,query)
 
@@ -53,6 +50,8 @@ def handle(socket):
                 px.rainbowCycle()
             elif "ColorGradient" in query:
                 px.bezier_gradient()
+            elif "MeteorRain" in query:
+                px.meteorRain()
             elif "Fire" in query:
                 px.fire()
                 #print("Fire")
@@ -66,6 +65,8 @@ def handle(socket):
 server = usocket.socket()
 server.bind(('0.0.0.0', 80))
 server.listen(1)
+#px.off()
+
 while True:
     try:
         (socket, sockaddr) = server.accept()
