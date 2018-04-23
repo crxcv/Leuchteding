@@ -1,5 +1,4 @@
 body {
-  background: linear-gradient(80deg, orange, yellow, green, cyan, blue, violet);
   /* Standard syntax (must be last) */
 }
 .rainbow-preloader .rainbow-stripe:nth-child(1) {
