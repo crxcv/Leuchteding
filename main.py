@@ -5,73 +5,83 @@ TITLE    = "RainbowWarrior"
 
 #import network
 #import machine
-import usocket
+from microWebSrv import MicroWebSrv
+import _thread
 import px as px
 import connectSTA_AP
+#import picoweb
 
 #connect in station mode if possible, else creates access point
+#thread_connect = _thread.start_new_thread("thread_wifiConnect", connect, ())
 connectSTA_AP.connect()
+html = open('www/index.html', 'rb')
+srv_run_in_thread = True
+light = ""
 
-#px = px.Pixels(pin = 14, numLed = 60)
+@MicroWebSrv.route('/')
+def _httpHandlerGet(httpClient, httpResponse):
+    content = """\
+    <!DOCTYPE html>
+    <html lang=en>
+        <head>
+            <meta charset="UTF-8" />
+            <title>TEST GET</title>
+        </head>
+        <body>
+            <h1>TEST GET</h1>
+            Client IP address = %s
+            <br />
+            <form action="/TEST" method="post" accept-charset="ISO-8859-1">
+                First name: <input type="text" name="firstname"><br />
+                Last name: <input type="text" name="lastname"><br />
+                <input type="submit" value="Submit">
+            </form>
+        </body>
+    </html>
+    """ % httpClient.GetIPAddr()
+    httpResponse.WriteResponseOk(   headers    = None,
+                                    contentType = "text/html",
+                                    contentCharset = "UTF-8",
+                                    content = html)
 
-def start(socket, query):
-    socket.write("HTTP/1.1 OK\r\n\r\n")
-    html = open('index.html', 'rb')
-    socket.write(html.read())
+@MicroWebSrv.route('/', 'POST')
+def _httpHandlerPost(httpClient, httpResponse) :
+    formData = httpClient.ReadRequestPostedFormData()
+    firstname = formData["firstname"]
+    lastname  = formData["lastname"]
+    content   = """\
+    <!DOCTYPE html>
+    <html lang=en>
+        <head>
+            <meta charset="UTF-8" />
+            <title>TEST POST</title>
+        </head>
+        <body>
+            <h1>TEST POST</h1>
+            Firstname = %s<br />
+            Lastname = %s<br />
+        </body>
+    </html>
+    """ % ( MicroWebSrv.HTMLEscape(firstname),
+            MicroWebSrv.HTMLEscape(lastname) )
 
+    light = formData["light"]
+    if "RainbowCycle" in light:
+        px.rainbowCycle()
+    elif "ColorGradient" in light:
+        px.bezier_gradient()
+    elif "MeteorRain" in light:
+        px.meteorRain()
+    elif "Fire" in light:
+        px.fire()
+        #print("Fire")
+    elif "Off" in light:
+        px.off()
 
-def err(socket, code, message):
-    socket.write("HTTP/1.1 "+code+" "+message+"\r\n\r\n")
-    socket.write("<h1>"+message+"</h1>")
+    httpResponse.WriteResponseOk(headers        = None,
+                                    contentType = "text/html",
+                                    contentCharset = "UTF-8",
+                                    content = html)
 
-def handle(socket):
-    (method, url, version) = socket.readline().split(b" ")
-    if b"?" in url:
-        (path, query) = url.split(b"?", 2)
-    else:
-        (path, query) = (url, b"")
-
-    while True:
-        header = socket.readline()
-        if header == b"":
-            return
-        if header == b"\r\n":
-            break
-
-    if version != b"HTTP/1.0\r\n" and version != b"HTTP/1.1\r\n":
-        err(socket, "505", "Version Not Supported")
-    elif method == b"GET":
-        if path == b"/":
-            start(socket, query)
-        elif path == b"/light":
-            start(socket,query)
-
-            if "RainbowCycle" in query:
-                px.rainbowCycle()
-            elif "ColorGradient" in query:
-                px.bezier_gradient()
-            elif "MeteorRain" in query:
-                px.meteorRain()
-            elif "Fire" in query:
-                px.fire()
-                #print("Fire")
-            elif "Off" in query:
-                px.off()
-        else:
-            err(socket, "404", "Not Found")
-    else:
-        err(socket, "501", "Not Implemented")
-
-server = usocket.socket()
-server.bind(('0.0.0.0', 80))
-server.listen(1)
-#px.off()
-
-while True:
-    try:
-        (socket, sockaddr) = server.accept()
-        handle(socket)
-    except:
-        socket.write("HTTP/1.1 500 Internal Server Error\r\n\r\n")
-        socket.write("<h1>Internal Server Error</h1>")
-    socket.close()
+srv = MicroWebSrv(webPath = 'www/')
+srv.Start(threaded = srv_run_in_thread, stackSize= 8192)
