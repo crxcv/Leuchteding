@@ -1,4 +1,4 @@
-import time, machine, math, random
+import time, machine, math, random, _thread
 
 pin = 14
 led = 60
@@ -44,10 +44,17 @@ def Wheel(wheelPos):
 
 # Slightly different, this makes the rainbow equally distributed throughout
 def rainbowCycle(wait=0.003):
+    _thread.allowsuspend(True)
+
     print("rainbowCycle")
     while True:
         for j in range (256*5): #5 cycles of all colors on wheel
+            ntf = _thread.getnotification()
+            if ntf == _thread.EXIT:
+                return
             for i in range (0, led):
+
+
                 val = Wheel((int(i * 256 / led)+j ) & 255 )
                 RGB = [int(x) for x in val]
                 colInt = int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB]))
@@ -85,6 +92,7 @@ def bernstein(t,n,i):
 
 
 def bezier_gradient(colors=None, n_out=None):
+    _thread.allowsuspend(True)
     #print("bezier")
     ''' Returns a "bezier gradient" dictionary
         using a given list of colors as control
@@ -107,6 +115,10 @@ def bezier_gradient(colors=None, n_out=None):
 
         return int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in out]))
     while True:
+        ntf = _thread.getnotification()
+        if ntf == _thread.EXIT:
+            return
+
         if colors is None:
             colors=threecolors
         if n_out is None:
@@ -136,11 +148,15 @@ def bezier_gradient(colors=None, n_out=None):
 # ------------ fire --------------------
 def fire(cooling = 55, sparkling = 120, speedDelay = 0.00000015):
     #w, h = 3, led
-
+    _thread.allowsuspend(True)
     heat = [0x00 for x in range(int(led), 0, -1)]
     cooldown = 0
     while True:
         # Step 1: cool down every cell a little
+        ntf = _thread.getnotification()
+        if ntf == _thread.EXIT:
+            return
+
         for i in range(int(led)):
             cooldown = random.randint(0, int((cooling * 10) / int(led)) +2)
 
@@ -190,7 +206,7 @@ def setPixelHeatColor(pixel, temp):
 # --------------- meteorRain -------------------------
 
 def setAll(red, green, blue):
-    for i in range (strip.n):
+    for i in range (led):
         strip.set(i,RGB_to_hex(red, green, blue))
 
 
@@ -210,15 +226,21 @@ def fadeToBlack(ledNo, fadeValue):
 
 #0xff,0xff,0xff,7, 255, True, 0.00030
 def meteorRain(red=0xff, green=0xff, blue=0xff, meteorSize = 7, meteorTrailDecay = 255, meteorRandomDecay = True, speedDelay = 0.00030):
+    _thread.allowsuspend(True)
+
     setAll(0,0,0);
 
-    for i in range (strip.n):
-        for j in range (strip.n):
+    for i in range (led):
+        ntf = _thread.getnotification()
+        if ntf == _thread.EXIT:
+            return
+
+        for j in range (led):
             if (not meteorRandomDecay) or random.randint(0,10) > 5 :
                 fadeToBlack(j, meteorTrailDecay)
 
         for j in range (meteorSize):
-            if i-j < strip.n and i-j >= 0:
+            if i-j < led and i-j >= 0:
                 strip.set(i-j, RGB_to_hex(red, green, blue))
         #strip.show()
         time.sleep(speedDelay)
@@ -229,9 +251,3 @@ def off():
     for i in range (led):
         strip.set(i, 0x00)
     #strip.show()
-
-if __name__ == "__main__":
-    #rainbowCycle()
-    #bezier_gradient()
-    #fire()
-    meteorRain()

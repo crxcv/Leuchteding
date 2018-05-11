@@ -4,12 +4,16 @@ TITLE    = "RainbowWarrior"
 # End configuration
 
 #import network
-#import machine
+from machine import Pin, TouchPad
 from microWebSrv import MicroWebSrv
 import _thread
 import px as px
 import connectSTA_AP
-#import picoweb
+import micropython
+import time
+
+#exception buffer for interrupt handler
+#micropython.alloc_memory_exception_buff(100)
 
 #connect in station mode if possible, else creates access point
 #thread_connect = _thread.start_new_thread("thread_wifiConnect", connect, ())
@@ -17,6 +21,13 @@ connectSTA_AP.connect()
 html = open('www/index.html', 'rb')
 srv_run_in_thread = True
 light = ""
+
+touchLight = TouchPad(Pin(27))
+touchLight.config(600)
+touchThreshold = touchLight.read() - 400
+lightCase = 0
+lightMax = 5
+oldLightVal = 0
 
 @MicroWebSrv.route('/')
 def _httpHandlerGet(httpClient, httpResponse):
@@ -67,16 +78,21 @@ def _httpHandlerPost(httpClient, httpResponse) :
 
     light = formData["light"]
     if "RainbowCycle" in light:
-        px.rainbowCycle()
+        lightCase = 4
+        #px.rainbowCycle()
     elif "ColorGradient" in light:
-        px.bezier_gradient()
+        lightCase = 3
+        #px.bezier_gradient()
     elif "MeteorRain" in light:
-        px.meteorRain()
+        lightCase = 2
+        #px.meteorRain()
     elif "Fire" in light:
         px.fire()
+        #lightCase = 1
         #print("Fire")
     elif "Off" in light:
-        px.off()
+        lightCase = 0
+        #px.off()
 
     httpResponse.WriteResponseOk(headers        = None,
                                     contentType = "text/html",
@@ -85,3 +101,48 @@ def _httpHandlerPost(httpClient, httpResponse) :
 
 srv = MicroWebSrv(webPath = 'www/')
 srv.Start(threaded = srv_run_in_thread, stackSize= 8192)
+
+def lightFunc(lightVal):
+    #elif ntf == _thread.SUSPEND
+
+    if lightVal is 0:
+        print("turning pixels off")
+        px.off();
+    elif lightVal is 1:
+        print("starting fire anim")
+        px.fire();
+    elif lightVal is 2:
+        print("starting meteor anim")
+        px.meteorRain();
+    elif lightVal is 3:
+        print("starting bezier anim")
+        px.bezier_gradient();
+    elif lightVal is 4:
+        print("starting rainbow anim")
+        px.rainbowCycle();
+
+
+lightAnim_thread = _thread.start_new_thread("lightAnim", lightFunc, (lightCase, ))
+
+
+while True:
+    ntf = _thread.getnotification()
+    touchval = touchLight.read()
+
+    if touchval < 400 and touchval > 100:
+        print("got triggered\nlightCase: ")
+        lightCase = [lightCase +1, 0][lightCase+1 >= lightMax]
+        print(lightCase)
+        print("touchVal: {}".format(touchval))
+        try:
+            _thread.notify(lightAnim_thread, _thread.EXIT)
+            time.sleep_ms(300)
+
+            _thread.stop(lightAnim_thread)
+            time.sleep_ms(300)
+
+            lightAnim_thread = _thread.start_new_thread("lightAnim", lightFunc, (lightCase,))
+        except Exception:
+            print("some error occured")
+        time.sleep_ms(500)
+    #touchLight.irq(trigger=Pin.IRQ_FALLING, handler = lightFunc)
