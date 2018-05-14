@@ -10,6 +10,10 @@ threecolors = {"#00173d", "#f75002", "#01f2f7"}
 w, h = 3, int(led/2)
 #oldColor = [[ 0x00 for x in range (w)] for y in range(h)]
 
+#set brightness
+def setBrightness(ldrVal):
+    brightness = ldrVal*1024 / 255
+    strip.brightness(int(brightness))
 # ------------converting values
 def hex_to_RGB(hex):
     ''' "#FFFFFF" -> [255,255,255] '''
@@ -137,19 +141,23 @@ def bezier_gradient(colors=None, n_out=None):
             strip.set(n,  gradient[n])
             strip.set((led-1-n), gradient[n])
 
+        #{"#00173d", "#f75002", "#01f2f7"}
+        #for col in colors: 
+
+
         #strip.show()
         # Return all points requested for gradient
-        return {
-            "gradient": color_dict(gradient),
-            "control": color_dict(RGB_list)
-        }
+        #return {
+            #"gradient": color_dict(gradient),
+            #"control": color_dict(RGB_list)
+        #}
 # ---------- end of bezier_gradient-------------
 
 # ------------ fire --------------------
 def fire(cooling = 55, sparkling = 120, speedDelay = 0.00000015):
     #w, h = 3, led
     _thread.allowsuspend(True)
-    heat = [0x00 for x in range(int(led), 0, -1)]
+    heat = [0x00 for x in range(int(led/2), 0, -1)]
     cooldown = 0
     while True:
         # Step 1: cool down every cell a little
@@ -157,8 +165,8 @@ def fire(cooling = 55, sparkling = 120, speedDelay = 0.00000015):
         if ntf == _thread.EXIT:
             return
 
-        for i in range(int(led)):
-            cooldown = random.randint(0, int((cooling * 10) / int(led)) +2)
+        for i in range(int(led/2)):
+            cooldown = random.randint(0, int((cooling * 10) / int(led/2)) +2)
 
             if (cooldown > heat[i]):
                 heat[i] = 0
@@ -166,7 +174,7 @@ def fire(cooling = 55, sparkling = 120, speedDelay = 0.00000015):
                 heat[i] = heat[i] - cooldown
 
         # Step 2: Heat from each cell drifts
-        for k in range(int(led)-1, 1, -1):
+        for k in range(int(led/2)-1, 1, -1):
             heat[k] = (heat[k-1] +  heat[k-2] + heat[k-2]) / 3
 
         # Step 3 randomly ignite new "sparks" near the bottom
@@ -175,12 +183,12 @@ def fire(cooling = 55, sparkling = 120, speedDelay = 0.00000015):
             heat[y] = heat[y] + random.randint(160, 255)
 
         # Step 4 convert heat to led colours
-        for j in range(int(led)):
-            setPixelHeatColor(j, heat[j])
-            #setPixelHeatColor(int(led/2)-j, heat[j])
-            #setPixelHeatColor(int(led/2)+j, heat[j])
+        for j in range(int(led/2)):
+            #setPixelHeatColor(j, heat[j])
+            setPixelHeatColor(int(led/2)-j, heat[j])
+            setPixelHeatColor(int(led/2)+j, heat[j])
         #strip.show()
-        time.sleep(speedDelay/10000)
+        #time.sleep_ms(1)
 
 def setPixelHeatColor(pixel, temp):
     # scale heat down from 0-255 to 0-191
@@ -207,15 +215,16 @@ def setPixelHeatColor(pixel, temp):
 
 def setAll(red, green, blue):
     for i in range (led):
-        strip.set(i,RGB_to_hex(red, green, blue))
+        strip.set(i, int(RGB_to_hex([red, green, blue])))
 
 
 def fadeToBlack(ledNo, fadeValue):
     oldVal = strip.get(ledNo)
-    oldCol = RGB_to_hex(oldVal)
-    r = (oldVal[0] | 0x00ff0000) >> 16
-    g = (oldVal[1] & 0x0000ff00) >> 8
-    b = (oldVal[2] & 0x000000ff)
+    print("strip.get: {}".format(oldVal))
+    oldCol = hex_to_RGB(oldVal)
+    r = (oldCol[0] | 0x00ff0000) >> 16
+    g = (oldCol[1] & 0x0000ff00) >> 8
+    b = (oldCol[2] & 0x000000ff)
 
 
     r= 0 if (r<=10) else int(r-(r*fadeValue/256))
@@ -228,7 +237,7 @@ def fadeToBlack(ledNo, fadeValue):
 def meteorRain(red=0xff, green=0xff, blue=0xff, meteorSize = 7, meteorTrailDecay = 255, meteorRandomDecay = True, speedDelay = 0.00030):
     _thread.allowsuspend(True)
 
-    setAll(0,0,0);
+    setAll(0x00, 0x00, 0x00)
 
     for i in range (led):
         ntf = _thread.getnotification()
