@@ -100,6 +100,7 @@ DS8 = 4978
 # set up pin PWM timer for output to buzzer or speaker
 #piezo = PWM(Pin(22, Pin.OUT), freq = 3000, duty = 50)
 piezo=PWM(22)
+#piezo.freq(0)
 
 #p2 = Pin("Y2") # Pin Y2 with timer 8 Channel 2
 #tim = Timer(8, freq=3000)
@@ -124,6 +125,7 @@ def find_song(song):
     tune = RTTTL(songs.find(song))
     for freq, msec in tune.notes():
         play_tone(freq, msec)
+    piezo.deinit()
 
 
 # play all tone

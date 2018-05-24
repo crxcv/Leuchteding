@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang=de>
+  <head>
+    <title>RainbowWarrior Alarm Settings</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  </head>
+  <body>
+    <form method="POST" action="alarm.html" id="setTime">
+      <label form="setTime">set current system time</label></br>
+      <label for"year">Year</label>
+      <input type="text" name="year" id="year" maxlength="4">
+
+      <label for"month">Month</label>
+      <input type="text" name="month" id="month" maxlength="2">
+
+      <label for"hour">Hour</label>
+      <input type="text" name="hour" id="hour" maxlength="2">
+
+      <label for"minute">minute</label>
+      <input type="text" name="minute" id="minute" maxlength="2">
+    </br>
+      <button type="reset">Eingabe zurücksetzen</button>
+      <button type="submit">Eingabe absenden</button>
+    </form>
+    </br>
+    </br>
+    <form method="POST" action="alarm.html" id="setAlarm">
+      <label form="setAlarm">set Alarm time</label>
+      </br>
+      <label for"hour">Hour</label>
+      <input type="text" name="hour" id="hour" maxlength="2">
+
+      <label for"minute">minute</label>
+      <input type="text" name="minute" id="minute" maxlength="2">
+      </br>
+      <label >
+        <input type="checkbox" name="dailyAlarm" value="dailyAlarm" checked="checked">
+        daily Alarm
+      </label>
+
+      </br>
+      <button type="submit">Eingabe absenden</button>
+    </form>
+  </br></br>
+
+  <form method="POST" action="alarm.html" id="setSound">
+    <label form="setSound">Wecksound wählen</label>
+  </br>
+  <input type="radio" id="Super Mario - Main Theme" name="setSound" value="Super Mario - Main Theme">
+    <label for="Super Mario - Main Theme"> Super Mario - Main Theme</label> </br>
+
+    <input type="radio" id="Super Mario - Title Music" name="setSound" value="Super Mario - Title Music">
+      <label for="Super Mario - Title Music"> Super Mario - Title Music</label> </br>
+
+    <input type="radio" id="Looney" name="setSound" value="Looney">
+      <label for="Looney"> Looney Tunes Theme</label> </br>
+
+    <input type="radio" id="The Simpsons" name="setSound" value="The Simpsons">
+      <label for="The Simpsons"> The Simpsons</label> </br>
+
+    <input type="radio" id="Indiana" name="setSound" value="Indiana">
+      <label for="Indiana"> Indiana Jones</label> </br>
+
+    <input type="radio" id="muppets" name="setSound" value="muppets">
+      <label for="muppets"> The Muppet Show</label> </br>
+
+    <input type="radio" id="Gadget" name="setSound" value="Gadget">
+      <label for="Gadget"> Inspector Gadget</label> </br>
+
+    <input type="radio" id="StarWars" name="setSound" value="StarWars">
+      <label for="StarWars"> Star Wars Theme</label> </br>
+
+    <input type="radio" id="Tetris" name="setSound" value="Tetris">
+      <label for="Tetris"> Tetris Theme</label> </br>
+
+    <button type="button">Song abspielen</button>
+    <button type="submit">Wecksound wählen</button>
+  </form>
+
+</body>
+</html>
