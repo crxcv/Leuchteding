@@ -1,59 +1,55 @@
 from microWebSrv import MicroWebSrv
 import _thread
+import px as px
 
-#html = open('index.html', 'rw')
-htmlAlarm = open('www/alarm.html', 'rw')
 srv_run_in_thread = True
+lightCase = 0
+oldLightVal = 0
+lightCase = 0
+lightAnim_thread = 0
 
-@MicroWebSrv.route('/')
-def _httpHandlerGet(httpClient, httpResponse):
-    content = """\
-    <!DOCTYPE html>
-    <html lang=en>
-        <head>
-            <meta charset="UTF-8" />
-            <title>TEST GET</title>
-        </head>
-        <body>
-            <h1>TEST GET</h1>
-            Client IP address = %s
-            <br />
-            <form action="/TEST" method="post" accept-charset="ISO-8859-1">
-                First name: <input type="text" name="firstname"><br />
-                Last name: <input type="text" name="lastname"><br />
-                <input type="submit" value="Submit">
-            </form>
-        </body>
-    </html>
-    """ % httpClient.GetIPAddr()
-    httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
-    #httpResponse.WriteResponseFileAttachment('www/style.css', 'bootstrap.min.css', headers=None)
-    #httpResponse.WriteResponseFileAttachment('www/bootstrap.min.css', 'bootstrap.min.css', headers=None)
 
-    #httpResponse.WriteResponseOk(   headers    = None,                                  contentType = "text/html",
-                                    #contentCharset = "UTF-8",
-                                    #content = html)
+def lightFunc(lightVal):
+    #elif ntf == _thread.SUSPEND
+
+    if lightVal is 0:
+        print("turning pixels off")
+        px.off();
+    elif lightVal is 1:
+        print("starting fire anim")
+        px.fire();
+    elif lightVal is 2:
+        print("starting meteor anim")
+        px.meteorRain();
+    elif lightVal is 3:
+        print("starting bezier anim")
+        px.bezier_gradient();
+    elif lightVal is 4:
+        print("starting rainbow anim")
+        px.rainbowCycle();
+
+
+
+def startLightThread(lightCase):
+    #if lightAnim_thread:
+    #    _thread.notify(lightAnim_thread, _thread.EXIT)
+    #    time.sleep_ms(300)
+    #
+    #    _thread.stop(lightAnim_thread)
+    #    time.sleep_ms(300)
+    print("started lightThread")
+    try:
+        lightAnim_thread = _thread.start_new_thread("lightAnim", lightFunc, (lightCase,))
+
+    except Exception as e:
+        print("some error occured: {}".format(e))
+
 
 @MicroWebSrv.route('/', 'POST')
 def _httpHandlerPost(httpClient, httpResponse) :
+    print("got post request")
     formData = httpClient.ReadRequestPostedFormData()
-    firstname = formData["firstname"]
-    lastname  = formData["lastname"]
-    content   = """\
-    <!DOCTYPE html>
-    <html lang=en>
-        <head>
-            <meta charset="UTF-8" />
-            <title>TEST POST</title>
-        </head>
-        <body>
-            <h1>TEST POST</h1>
-            Firstname = %s<br />
-            Lastname = %s<br />
-        </body>
-    </html>
-    """ % ( MicroWebSrv.HTMLEscape(firstname),
-            MicroWebSrv.HTMLEscape(lastname) )
+    print(formData)
 
     light = formData["light"]
     if "RainbowCycle" in light:
@@ -71,15 +67,12 @@ def _httpHandlerPost(httpClient, httpResponse) :
         #print("Fire")
     elif "Off" in light:
         lightCase = 0
-        #px.off()
+        #px.off()    print("lightCase: {}".format(lightCase))
+    print(lightCase)
     startLightThread(lightCase)
 
+    httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
 
-
-    httpResponse.WriteResponseOk(headers        = None,
-                                        contentType = "text/html",
-                                        contentCharset = "UTF-8",
-                                        content = html)
 @MicroWebSrv.route('/alarm')
 def _httpHandlerGetAlarm(httpClient, httpResponse):
     print("alarm site opened")
@@ -111,37 +104,6 @@ def _httpHandlerPost(httpClient, httpResponse) :
                                     contentType = "text/html",
                                     contentCharset = "UTF-8",
                                     content = content)
-
-@MicroWebSrv.route('/edit/<index>')             # <IP>/edit/123           ->   args['index']=123
-@MicroWebSrv.route('/edit/<index>/abc/<foo>')   # <IP>/edit/123/abc/bar   ->   args['index']=123  args['foo']='bar'
-@MicroWebSrv.route('/edit')                     # <IP>/edit               ->   args={}
-def _httpHandlerEditWithArgs(httpClient, httpResponse, args={}) :
-    content = """\
-    <!DOCTYPE html>
-    <html lang=en>
-        <head>
-            <meta charset="UTF-8" />
-            <title>TEST EDIT</title>
-        </head>
-        <body>
-    """
-    content += "<h1>EDIT item with {} variable arguments</h1>"\
-        .format(len(args))
-
-    if 'index' in args :
-        content += "<p>index = {}</p>".format(args['index'])
-
-    if 'foo' in args :
-        content += "<p>foo = {}</p>".format(args['foo'])
-
-    content += """
-        </body>
-    </html>
-    """
-    httpResponse.WriteResponseOk( headers		 = None,
-                                    contentType	 = "text/html",
-                                    contentCharset = "UTF-8",
-                                    content 		 = content )
 
     #--------------------------------------------------------------------
 def startServer():
