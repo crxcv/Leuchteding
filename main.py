@@ -1,20 +1,22 @@
-from microWebSrv import MicroWebSrv
 from machine import Pin, TouchPad, ADC, DAC, PWM, RTC
+import webSrv as server
+import _thread
 import connectSTA_AP
 import time
 
-import _thread
 import px as px
 
 #connect to wifi or create access point
 connectSTA_AP.connect()
 
-srv_run_in_thread = True
+#start webServer
+server.start()
+
+oldLightCase = 0
 lightCase = 0
-oldLightVal = 0
-lightCase = 0
-lightMax = 5
 lightAnim_thread = 0
+lightMax = 5
+
 _thread.replAcceptMsg(True)
 
 #touch sensor configuration
@@ -36,79 +38,28 @@ def handleLightThread(val):
     lightAnim_thread = px.startAnimThread(val)
 
 
-@MicroWebSrv.route('/', 'POST')
-def _httpHandlerPost(httpClient, httpResponse) :
-    formData = httpClient.ReadRequestPostedFormData()
-    #print(formData)
-    light = formData["light"]
-    global lightCase
 
-    if "RainbowCycle" in light:
-        lightCase = 4
-    elif "ColorGradient" in light:
-        lightCase = 3
-    elif "MeteorRain" in light:
-        lightCase = 2
-    elif "Fire" in light:
-        lightCase = 1
-    else:
-        lightCase = 0
-    #print(lightCase)
-    handleLightThread(lightCase)
-    httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
-
-@MicroWebSrv.route('/alarm')
-def _httpHandlerGetAlarm(httpClient, httpResponse):
-    #print("alarm site opened")
-    httpResponse.WriteResponseOk( headers   = None,
-                                        contentType = "text/html",
-                                        contentCharset = "UTF-8",
-                                        content = content)
-
-@MicroWebSrv.route('/alarm', 'POST')
-def _httpHandlerPost(httpClient, httpResponse) :
-    args = httpClient.ReadRequestPostedFormData()
-    #print(args)
-    if 'setTime' in args:
-        currTime = RTC()
-        currTime.init((args['year'], args['month'], args['day'], args['hour'], args['minute'], 0, 0, 0))
-
-    #if 'setAlarm' in args:
-
-    if 'setSound' in args:
-        song = args['setSound']
-
-        if args['btn'] is 'play':
-            import piezo as pz
-            soundThread = _thread.start_new_thread("playSound", pz.find_song, (song, ))
-            #print("sound set to {}",format(song))
-
-    httpResponse.WriteResponseOk( headers   = None,
-                                    contentType = "text/html",
-                                    contentCharset = "UTF-8",
-                                    content = content)
-
-    #-----------------------------------------------------------------
-
-#create server instance and start server
-srv = MicroWebSrv(webPath = 'www')
-srv.Start(threaded = srv_run_in_thread, stackSize= 8192)
-#print("started webServer\nstarting 1st lightAnim = Off")
 #lightAnim_thread = px.startAnimThread(0)
 handleLightThread(0)
 
 while True:
-    #ldrVal = ldrPin.readraw()
-    #print("ldr value: {}".format(ldrPin.read()))
-    time.sleep_ms(300)
-    #piezo.freq(ldrVal)
-    touchval = touchLight.read()
-    val = ldr.read()
-    #print("ldr: {}".format(val))
 
-    if touchval < 400 and touchval > 100:
-        #print("got triggered\nlightCase: ")
+    touchval = touchLight.read()
+    #print(touchval)
+    #ldrVal = ldr.read()
+    #print("ldr: {}".format(ldrVal))
+    server.setLightCase(lightCase)
+    time.sleep_ms(100)
+    lightCase = server.getLightCase()
+    if touchval < touchThreshold and touchval > 100:
+        print("got touched ")
+        print("lc before touch: {}".format(lightCase))
         lightCase = [lightCase +1, 0][lightCase+1 >= lightMax]
-        #print(lightCase)
-        #print("touchVal: {}".format(touchval))
+        print("lc after touch: {}".format(lightCase))
+        time.sleep_ms(500)
+
+    #    handleLightThread(lightCase)
+    if lightCase is not oldLightCase:
+        print("anim no {}".format(lightCase))
+        oldLightCase = lightCase
         handleLightThread(lightCase)
