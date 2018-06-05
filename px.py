@@ -1,7 +1,7 @@
-import time, machine, math, random, _thread, gc
-
+import  machine, math, random, _thread, gc
+from time import sleep
 pin = 14
-led = 60
+led = 15
 strip = machine.Neopixel(machine.Pin(pin), led, 0)
 fact_cache = {}
 threecolors = {"#00173d", "#f75002", "#01f2f7"}
@@ -49,21 +49,17 @@ def Wheel(wheelPos):
 # Slightly different, this makes the rainbow equally distributed throughout
 def rainbowCycle(wait=0.00):
     _thread.allowsuspend(True)
-
-    print("rainbowCycle")
-    while True:
-        for j in range (256*5): #5 cycles of all colors on wheel
-            ntf = _thread.getnotification()
-            if ntf == _thread.EXIT:
-                print("exiting rainbow")
-                return
-            for i in range (0, led):
-                val = Wheel((int(i * 256 / led)+j ) & 255 )
-                RGB = [int(x) for x in val]
-                colInt = int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB]))
-                strip.set(i, colInt)
-            time.sleep(wait)
-            gc.collect()
+    #for j in range (256*5): #5 cycles of all colors on wheel
+    ntf = _thread.getnotification()
+    if ntf == _thread.EXIT:
+        return
+    for i in range (0, led):
+        val = Wheel((int(i * 256 / led)+j ) & 255 )
+        RGB = [int(x) for x in val]
+        colInt = int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB]))
+        strip.set(i, colInt)
+    sleep(wait)
+    gc.collect()
 
 # --------colorGradient + dependencies -------------
 def color_dict(gradient):
@@ -116,6 +112,7 @@ def bezier_gradient(colors=None, n_out=None):
                 out[c] += vector[c]
 
         return int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in out]))
+
     while True:
         ntf = _thread.getnotification()
         if ntf == _thread.EXIT:
@@ -161,7 +158,6 @@ def fire(cooling = 70, sparkling = 140, speedDelay = 0.0):
         # Step 1: cool down every cell a little
         ntf = _thread.getnotification()
         if ntf == _thread.EXIT:
-            print("exiting fire")
             return
 
         for i in range(int(led/2)):
@@ -209,11 +205,19 @@ def setPixelHeatColor(pixel, temp):
     strip.set(pixel, colInt)
 # --------------fire - end -----------------------
 
+
+def coloredWhatever():
+    setAll(255, 0, 0, 0.5)
+    setAll(0, 0, 0, 0.5)
+    setAll(0, 255, 0, 0.5)
+    setAll(0, 0, 0, 0.5)
+
 # --------------- meteorRain -------------------------
 
-def setAll(red, green, blue):
+def setAll(red, green, blue, wait = 0.0):
     for i in range (led):
         strip.set(i, int(RGB_to_hex([red, green, blue])))
+        sleep(wait)
 
 
 def fadeToBlack(ledNo, fadeValue):
@@ -239,7 +243,6 @@ def meteorRain(red=0xff, green=0xff, blue=0xff, meteorSize = 7, meteorTrailDecay
     for i in range (led):
         ntf = _thread.getnotification()
         if ntf == _thread.EXIT:
-            print("exiting meteor")
             return
 
         for j in range (led):
@@ -249,31 +252,40 @@ def meteorRain(red=0xff, green=0xff, blue=0xff, meteorSize = 7, meteorTrailDecay
         for j in range (meteorSize):
             if i-j < led and i-j >= 0:
                 strip.set(i-j, RGB_to_hex(red, green, blue))
-        time.sleep(speedDelay)
+        sleep(speedDelay)
 # ------------------ meteor end ----------------------------------
 
 #turn off all pixels
 def off():
-    #print("function off")
     for i in range (led):
         strip.set(i, 0x00)
 
-def startAnimThread(value):
-    global thread
-    #print ("px starting thread No {}".format(value))
-    if value is 4:
-        #print("starting ")
-        #rainbowCycle()
-        thread = _thread.start_new_thread("rainbow", rainbowCycle,())
-        #print("started ")
-    elif value is 3:
-        thread = _thread.start_new_thread("gradient", bezier_gradient, ())
-    elif value is 2:
-        thread = _thread.start_new_thread("meteor", meteorRain, ())
-    elif value is 1:
-        thread = _thread.start_new_thread("fire", fire, ())
+def thread(val):
+    if val is 4:
+        while True:
+            rainbowCycle()
+            strip.show()
+
+    elif val is 3:
+        bezier_gradient()
+    elif val is 2:
+        coloredWhatever()
+    elif val is 1:
+        fire()
     else:
-        #print("start turning off")
-        thread = _thread.start_new_thread("Off", off, ())
-        #print("turned off")
+        off()
+
+def startAnimThread(value):
+    return _thread.start_new_thread("startThread", thread, (value,))
+    #print ("px starting thread No {}".format(value))
+    #if value is 4:
+#        thread = _thread.start_new_thread("rainbow", rainbowCycle,())#
+#    elif value is 3:#
+#        thread = _thread.start_new_thread("gradient", bezier_gradient, ())
+#    elif value is 2:
+#        thread = _thread.start_new_thread("color", coloredWhatever, ())
+#    elif value is 1:
+#        thread = _thread.start_new_thread("fire", fire, ())
+#    else:
+#        thread = _thread.start_new_thread("Off", off, ())
     return thread

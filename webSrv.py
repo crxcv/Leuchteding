@@ -1,7 +1,7 @@
 from microWebSrv import MicroWebSrv
 import _thread
 
-srv_run_in_thread = True
+srv_run_in_thread = False
 lightC = 0
 
 def getLightCase():
@@ -14,7 +14,6 @@ def setLightCase(lCase):
 @MicroWebSrv.route('/', 'POST')
 def _httpHandlerPost(httpClient, httpResponse) :
     formData = httpClient.ReadRequestPostedFormData()
-    #print(formData)
     light = formData["light"]
     global lightC
 
@@ -28,40 +27,35 @@ def _httpHandlerPost(httpClient, httpResponse) :
         lightC = 1
     else:
         lightC = 0
-    #print(lightC)
-    #handleLightThread(lightC)
     httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
 
-@MicroWebSrv.route('/alarm')
-def _httpHandlerGetAlarm(httpClient, httpResponse):
-    #print("alarm site opened")
-    httpResponse.WriteResponseOk( headers   = None,
-                                        contentType = "text/html",
-                                        contentCharset = "UTF-8",
-                                        content = content)
+#@MicroWebSrv.route('/alarm')
+#def _httpHandlerGetAlarm(httpClient, httpResponse):#
+#    httpResponse.WriteResponseOk( headers   = None,
+#                                        contentType = "text/html",
+#                                        contentCharset = "UTF-8",
+#                                        content = content)
 
-@MicroWebSrv.route('/alarm', 'POST')
-def _httpHandlerPost(httpClient, httpResponse) :
-    args = httpClient.ReadRequestPostedFormData()
-    #print(args)
-    if 'setTime' in args:
-        currTime = RTC()
-        currTime.init((args['year'], args['month'], args['day'], args['hour'], args['minute'], 0, 0, 0))
+#@MicroWebSrv.route('/alarm', 'POST')
+#def _httpHandlerPost(httpClient, httpResponse) :
+#    args = httpClient.ReadRequestPostedFormData()
+#    if 'setTime' in args:
+#        currTime = RTC()
+#        currTime.init((args['year'], args['month'], args['day'], args['hour'], args['minute'], 0, 0, 0))
 
     #if 'setAlarm' in args:
 
-    if 'setSound' in args:
-        song = args['setSound']
+#    if 'setSound' in args:
+#        song = args['setSound']
 
-        if args['btn'] is 'play':
-            import piezo as pz
-            soundThread = _thread.start_new_thread("playSound", pz.find_song, (song, ))
-            #print("sound set to {}",format(song))
+#        if args['btn'] is 'play':
+#            import piezo as pz
+#            soundThread = _thread.start_new_thread("playSound", pz.find_song, (song, ))
 
-    httpResponse.WriteResponseOk( headers   = None,
-                                    contentType = "text/html",
-                                    contentCharset = "UTF-8",
-                                    content = content)
+#    httpResponse.WriteResponseOk( headers   = None,
+#                                    contentType = "text/html",
+#                                    contentCharset = "UTF-8",
+#                                    content = content)
 
     #-----------------------------------------------------------------
 def start():
