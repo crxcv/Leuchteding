@@ -27,19 +27,21 @@ ldr = ADC(Pin(36, Pin.IN))
 
 def handleLightThread(val):
     global lightAnim_thread
-    print("lightAnim thread No: {}".format(lightAnim_thread))
+    #("lightAnim thread No: {}".format(lightAnim_thread))
     if lightAnim_thread is not 0:
-        print("notifying light thread about abortion")
+        #print("notifying light thread about abortion")
         _thread.notify(lightAnim_thread, _thread.EXIT)
+        _thread.stop(lightAnim_thread)
         time.sleep_ms(300)
-    lightAnim_thread = px.startAnimThread(lightCase)
+    lightAnim_thread = px.startAnimThread(val)
 
 
 @MicroWebSrv.route('/', 'POST')
 def _httpHandlerPost(httpClient, httpResponse) :
     formData = httpClient.ReadRequestPostedFormData()
-    print(formData)
+    #print(formData)
     light = formData["light"]
+    global lightCase
 
     if "RainbowCycle" in light:
         lightCase = 4
@@ -51,13 +53,13 @@ def _httpHandlerPost(httpClient, httpResponse) :
         lightCase = 1
     else:
         lightCase = 0
-    print(lightCase)
+    #print(lightCase)
     handleLightThread(lightCase)
     httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
 
 @MicroWebSrv.route('/alarm')
 def _httpHandlerGetAlarm(httpClient, httpResponse):
-    print("alarm site opened")
+    #print("alarm site opened")
     httpResponse.WriteResponseOk( headers   = None,
                                         contentType = "text/html",
                                         contentCharset = "UTF-8",
@@ -66,7 +68,7 @@ def _httpHandlerGetAlarm(httpClient, httpResponse):
 @MicroWebSrv.route('/alarm', 'POST')
 def _httpHandlerPost(httpClient, httpResponse) :
     args = httpClient.ReadRequestPostedFormData()
-    print(args)
+    #print(args)
     if 'setTime' in args:
         currTime = RTC()
         currTime.init((args['year'], args['month'], args['day'], args['hour'], args['minute'], 0, 0, 0))
@@ -79,7 +81,7 @@ def _httpHandlerPost(httpClient, httpResponse) :
         if args['btn'] is 'play':
             import piezo as pz
             soundThread = _thread.start_new_thread("playSound", pz.find_song, (song, ))
-            print("sound set to {}",format(song))
+            #print("sound set to {}",format(song))
 
     httpResponse.WriteResponseOk( headers   = None,
                                     contentType = "text/html",
@@ -91,12 +93,11 @@ def _httpHandlerPost(httpClient, httpResponse) :
 #create server instance and start server
 srv = MicroWebSrv(webPath = 'www')
 srv.Start(threaded = srv_run_in_thread, stackSize= 8192)
-print("started webServer\nstarting 1st lightAnim = Off")
+#print("started webServer\nstarting 1st lightAnim = Off")
 #lightAnim_thread = px.startAnimThread(0)
 handleLightThread(0)
 
 while True:
-    #ntf = _thread.getnotification()
     #ldrVal = ldrPin.readraw()
     #print("ldr value: {}".format(ldrPin.read()))
     time.sleep_ms(300)
@@ -108,6 +109,6 @@ while True:
     if touchval < 400 and touchval > 100:
         #print("got triggered\nlightCase: ")
         lightCase = [lightCase +1, 0][lightCase+1 >= lightMax]
-        print(lightCase)
-        print("touchVal: {}".format(touchval))
-        #server.startLightThread(lightCase)    #touchLight.irq(trigger=Pin.IRQ_FALLING, handler = lightFunc)
+        #print(lightCase)
+        #print("touchVal: {}".format(touchval))
+        handleLightThread(lightCase)

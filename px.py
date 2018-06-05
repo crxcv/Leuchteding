@@ -1,7 +1,7 @@
 import time, machine, math, random, _thread
 
 pin = 14
-led = 60
+led = 30
 strip = machine.Neopixel(machine.Pin(pin), led, 0)
 fact_cache = {}
 threecolors = {"#00173d", "#f75002", "#01f2f7"}
@@ -33,7 +33,7 @@ def RGB_to_hex(RGB):
 # ---------- end conv. values ------------------
 
 
-# For Rainbow Input a value 0 to 255 to get a color value.
+# For  Input a value 0 to 255 to get a color value.
 # The colours are a transition r - g - b - back to r.
 def Wheel(wheelPos):
     wheelPos = 255 -  wheelPos
@@ -50,21 +50,17 @@ def Wheel(wheelPos):
 def rainbowCycle(wait=0.003):
     _thread.allowsuspend(True)
 
-    print("rainbowCycle")
+    #print("rainbowCycle")
     while True:
         for j in range (256*5): #5 cycles of all colors on wheel
             ntf = _thread.getnotification()
             if ntf == _thread.EXIT:
                 return
             for i in range (0, led):
-
-
                 val = Wheel((int(i * 256 / led)+j ) & 255 )
                 RGB = [int(x) for x in val]
                 colInt = int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB]))
-                #print("got color from wheel")
                 strip.set(i, colInt)
-            ##strip.show()
             time.sleep(wait)
 
 # --------colorGradient + dependencies -------------
@@ -132,7 +128,6 @@ def bezier_gradient(colors=None, n_out=None):
         RGB_list = [hex_to_RGB(color) for color in colors]
         n = len(RGB_list) - 1
 
-
         gradient = [
             bezier_interp(float(t)/(n_out-1))
             for t in range(n_out)
@@ -142,7 +137,7 @@ def bezier_gradient(colors=None, n_out=None):
             strip.set((led-1-n), gradient[n])
 
         #{"#00173d", "#f75002", "#01f2f7"}
-        #for col in colors: 
+        #for col in colors:
 
 
         #strip.show()
@@ -187,8 +182,6 @@ def fire(cooling = 55, sparkling = 120, speedDelay = 0.00000015):
             #setPixelHeatColor(j, heat[j])
             setPixelHeatColor(int(led/2)-j, heat[j])
             setPixelHeatColor(int(led/2)+j, heat[j])
-        #strip.show()
-        #time.sleep_ms(1)
 
 def setPixelHeatColor(pixel, temp):
     # scale heat down from 0-255 to 0-191
@@ -220,7 +213,7 @@ def setAll(red, green, blue):
 
 def fadeToBlack(ledNo, fadeValue):
     oldVal = strip.get(ledNo)
-    print("strip.get: {}".format(oldVal))
+    #print("strip.get: {}".format(oldVal))
     oldCol = hex_to_RGB(oldVal)
     r = (oldCol[0] | 0x00ff0000) >> 16
     g = (oldCol[1] & 0x0000ff00) >> 8
@@ -231,7 +224,6 @@ def fadeToBlack(ledNo, fadeValue):
     g= 0 if (g<=10) else int(g-(g*fadeValue/256))
     b= 0 if (b<=10) else int(b-(b*fadeValue/256))
     strip.set(ledNo, RGB_to_hex(r,g,b))
-    #strip.write()
 
 #0xff,0xff,0xff,7, 255, True, 0.00030
 def meteorRain(red=0xff, green=0xff, blue=0xff, meteorSize = 7, meteorTrailDecay = 255, meteorRandomDecay = True, speedDelay = 0.00030):
@@ -251,12 +243,30 @@ def meteorRain(red=0xff, green=0xff, blue=0xff, meteorSize = 7, meteorTrailDecay
         for j in range (meteorSize):
             if i-j < led and i-j >= 0:
                 strip.set(i-j, RGB_to_hex(red, green, blue))
-        #strip.show()
         time.sleep(speedDelay)
 # ------------------ meteor end ----------------------------------
 
 #turn off all pixels
 def off():
+    #print("function off")
     for i in range (led):
         strip.set(i, 0x00)
-    #strip.show()
+
+def startAnimThread(value):
+    #print ("px starting thread No {}".format(value))
+    if value is 4:
+        #print("starting ")
+        thread = _thread.start_new_thread("rainbow", rainbowCycle,())
+        #print("started ")
+    elif value is 3:
+        thread = _thread.start_new_thread("gradient", bezier_gradient, ())
+    elif value is 1:
+        thread = _thread.start_new_thread("fire", fire, ())
+    elif value is 2:
+        thread = _thread.start_new_thread("meteor", meteorRain, ())
+
+    else:
+        #print("start turning off")
+        thread = _thread.start_new_thread("Off", off, ())
+        #print("turned off")
+    return thread
