@@ -1,7 +1,7 @@
 from microWebSrv import MicroWebSrv
 import _thread
 
-srv_run_in_thread = False
+srv_run_in_thread = True
 lightC = 0
 
 def getLightCase():
@@ -15,18 +15,19 @@ def setLightCase(lCase):
 def _httpHandlerPost(httpClient, httpResponse) :
     formData = httpClient.ReadRequestPostedFormData()
     light = formData["light"]
-    global lightC
+    global lightCase
 
     if "RainbowCycle" in light:
-        lightC = 4
+        lightCase = 4
     elif "ColorGradient" in light:
-        lightC = 3
+        lightCase = 3
     elif "MeteorRain" in light:
-        lightC = 2
+        lightCase = 2
     elif "Fire" in light:
-        lightC = 1
+        lightCase = 1
     else:
-        lightC = 0
+        lightCase = 0
+    print("server lightcase: {}".format(lightCase))
     httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
 
 #@MicroWebSrv.route('/alarm')

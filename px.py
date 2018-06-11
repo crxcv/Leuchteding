@@ -1,7 +1,7 @@
 import  machine, math, random, _thread, gc
 from time import sleep
 pin = 14
-led = 15
+led = 12
 strip = machine.Neopixel(machine.Pin(pin), led, 0)
 fact_cache = {}
 threecolors = {"#00173d", "#f75002", "#01f2f7"}
@@ -36,6 +36,7 @@ def RGB_to_hex(RGB):
 # For  Input a value 0 to 255 to get a color value.
 # The colours are a transition r - g - b - back to r.
 def Wheel(wheelPos):
+    print("wheel")
     wheelPos = 255 -  wheelPos
     if( wheelPos < 85) :
         return [255 -  wheelPos * 3, 0,  wheelPos * 3]
@@ -49,16 +50,25 @@ def Wheel(wheelPos):
 # Slightly different, this makes the rainbow equally distributed throughout
 def rainbowCycle(wait=0.00):
     _thread.allowsuspend(True)
-    #for j in range (256*5): #5 cycles of all colors on wheel
-    ntf = _thread.getnotification()
-    if ntf == _thread.EXIT:
-        return
-    for i in range (0, led):
-        val = Wheel((int(i * 256 / led)+j ) & 255 )
-        RGB = [int(x) for x in val]
-        colInt = int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB]))
-        strip.set(i, colInt)
-    sleep(wait)
+    print("started rainbow")
+    for j in range (256): #5 cycles of all colors on wheel
+        #print("cycle {}".format(j))
+        ntf = _thread.getnotification()
+        if ntf == _thread.EXIT:
+            print("exiting rainbow")
+            return
+        for i in range (0, led):
+            #print("setting led {}".format(i))
+            val = Wheel((int(i * 256 / led)+j ) & 255 )
+            #print("saving wheel col")
+            RGB = [int(x) for x in val]
+            #print("converting to int")
+            colInt = int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB]))
+            #print("strip.set")
+            strip.set(i, colInt)
+            #print("set led {}".format(i))
+
+        sleep(wait)
     gc.collect()
 
 # --------colorGradient + dependencies -------------
@@ -113,39 +123,39 @@ def bezier_gradient(colors=None, n_out=None):
 
         return int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in out]))
 
-    while True:
-        ntf = _thread.getnotification()
-        if ntf == _thread.EXIT:
-            print("exiting bezier thread")
-            return
+    #while True:
+    ntf = _thread.getnotification()
+    if ntf == _thread.EXIT:
+        print("exiting bezier thread")
+        return
 
-        if colors is None:
-            colors=threecolors
-        if n_out is None:
-            n_out = led
+    if colors is None:
+        colors=threecolors
+    if n_out is None:
+        n_out = led
 
-        # RGB vectors for each color, use as control points
-        RGB_list = [hex_to_RGB(color) for color in colors]
-        n = len(RGB_list) - 1
+    # RGB vectors for each color, use as control points
+    RGB_list = [hex_to_RGB(color) for color in colors]
+    n = len(RGB_list) - 1
 
-        gradient = [
-            bezier_interp(float(t)/(n_out-1))
-            for t in range(n_out)
-        ]
-        for n in range(len(gradient)):
-            strip.set(n,  gradient[n])
-            strip.set((led-1-n), gradient[n])
+    gradient = [
+        bezier_interp(float(t)/(n_out-1))
+        for t in range(n_out)
+    ]
+    for n in range(len(gradient)):
+        strip.set(n,  gradient[n])
+        strip.set((led-1-n), gradient[n])
 
-        #{"#00173d", "#f75002", "#01f2f7"}
-        #for col in colors:
+    #{"#00173d", "#f75002", "#01f2f7"}
+    #for col in colors:
 
 
-        #strip.show()
-        # Return all points requested for gradient
-        #return {
-            #"gradient": color_dict(gradient),
-            #"control": color_dict(RGB_list)
-        #}
+    #strip.show()
+    # Return all points requested for gradient
+    #return {
+        #"gradient": color_dict(gradient),
+        #"control": color_dict(RGB_list)
+    #}
 # ---------- end of bezier_gradient-------------
 
 # ------------ fire --------------------
@@ -154,35 +164,35 @@ def fire(cooling = 70, sparkling = 140, speedDelay = 0.0):
     _thread.allowsuspend(True)
     heat = [0x00 for x in range(int(led/2), 0, -1)]
     cooldown = 0
-    while True:
-        # Step 1: cool down every cell a little
-        ntf = _thread.getnotification()
-        if ntf == _thread.EXIT:
-            return
+    #while True:
+    # Step 1: cool down every cell a little
+    ntf = _thread.getnotification()
+    if ntf == _thread.EXIT:
+        return
 
-        for i in range(int(led/2)):
-            cooldown = random.randint(0, int((cooling * 10) / int(led/2)) +2)
+    for i in range(int(led/2)):
+        cooldown = random.randint(0, int((cooling * 10) / int(led/2)) +2)
 
-            if (cooldown > heat[i]):
-                heat[i] = 0
-            else:
-                heat[i] = heat[i] - cooldown
+        if (cooldown > heat[i]):
+            heat[i] = 0
+        else:
+            heat[i] = heat[i] - cooldown
 
-        # Step 2: Heat from each cell drifts
-        for k in range(int(led/2)-1, 1, -1):
-            heat[k] = (heat[k-1] +  heat[k-2] + heat[k-2]) / 3
+    # Step 2: Heat from each cell drifts
+    for k in range(int(led/2)-1, 1, -1):
+        heat[k] = (heat[k-1] +  heat[k-2] + heat[k-2]) / 3
 
-        # Step 3 randomly ignite new "sparks" near the bottom
-        if(random.randint(0,255) < sparkling):
-            y = random.randint(0,7)
-            heat[y] = heat[y] + random.randint(160, 255)
+    # Step 3 randomly ignite new "sparks" near the bottom
+    if(random.randint(0,255) < sparkling):
+        y = random.randint(0,7)
+        heat[y] = heat[y] + random.randint(160, 255)
 
-        # Step 4 convert heat to led colours
-        for j in range(int(led/2)):
-            #setPixelHeatColor(j, heat[j])
-            setPixelHeatColor(int(led/2)-j, heat[j])
-            setPixelHeatColor(int(led/2)+j, heat[j])
-        gc.collect()
+    # Step 4 convert heat to led colours
+    for j in range(int(led/2)):
+        #setPixelHeatColor(j, heat[j])
+        setPixelHeatColor(int(led/2)-j, heat[j])
+        setPixelHeatColor(int(led/2)+j, heat[j])
+    gc.collect()
 
 def setPixelHeatColor(pixel, temp):
     # scale heat down from 0-255 to 0-191
@@ -217,7 +227,7 @@ def coloredWhatever():
 def setAll(red, green, blue, wait = 0.0):
     for i in range (led):
         strip.set(i, int(RGB_to_hex([red, green, blue])))
-        sleep(wait)
+        #rsleep(wait)
 
 
 def fadeToBlack(ledNo, fadeValue):
@@ -260,32 +270,20 @@ def off():
     for i in range (led):
         strip.set(i, 0x00)
 
-def thread(val):
-    if val is 4:
-        while True:
-            rainbowCycle()
-            strip.show()
-
-    elif val is 3:
-        bezier_gradient()
-    elif val is 2:
-        coloredWhatever()
-    elif val is 1:
-        fire()
-    else:
-        off()
 
 def startAnimThread(value):
+
+    def thread(val):
+        print("started thread")
+        while True:
+            if val is 4:
+                rainbowCycle()
+            elif val is 3:
+                bezier_gradient()
+            elif val is 2:
+                coloredWhatever()
+            elif val is 1:
+                fire()
+            else:
+                off()
     return _thread.start_new_thread("startThread", thread, (value,))
-    #print ("px starting thread No {}".format(value))
-    #if value is 4:
-#        thread = _thread.start_new_thread("rainbow", rainbowCycle,())#
-#    elif value is 3:#
-#        thread = _thread.start_new_thread("gradient", bezier_gradient, ())
-#    elif value is 2:
-#        thread = _thread.start_new_thread("color", coloredWhatever, ())
-#    elif value is 1:
-#        thread = _thread.start_new_thread("fire", fire, ())
-#    else:
-#        thread = _thread.start_new_thread("Off", off, ())
-    return thread
