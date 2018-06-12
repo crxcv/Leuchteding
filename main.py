@@ -8,6 +8,7 @@ import _thread
 
 #connect to wifi or create access point
 connectSTA_AP.connect()
+px.blink()
 oldLightCase = 0
 lightCase = 0
 lightAnim_thread = 0
@@ -55,10 +56,12 @@ def _httpHandlerPost(httpClient, httpResponse) :
 def handleLightThread(val):
     global lightAnim_thread
     print("handleLightThread")
-    if lightAnim_thread is not 0:
-        _thread.notify(lightAnim_thread, _thread.EXIT)
-        sleep_ms(1000)
+    #if lightAnim_thread is not 0:
+    #    _thread.notify(lightAnim_thread, _thread.EXIT)
+    #    sleep_ms(1000)
+    #lightAnim_thread = _thread.start_new_thread("lightAnim", px.thread, (val,))
     px.startAnimThread(val)
+
 
 #def touch():
     #global touchLight
@@ -80,10 +83,10 @@ handleLightThread(0)
 srv = MicroWebSrv(webPath = 'www')
 srv.Start(threaded = srv_run_in_thread, stackSize= 8192)
 while True:
-    print("mainloop")
-    sleep_ms(500)
+    #print("mainloop")
+    sleep_ms(100)
 
     if lightCase is not oldLightCase:
         print("lightCase changed: {}".format(lightCase))
         oldLightCase = lightCase
-        px.startAnimThread(lightCase)
+        handleLightThread(lightCase)

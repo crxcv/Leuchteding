@@ -1,5 +1,5 @@
 import  machine, math, random, _thread, gc
-from time import sleep
+from time import sleep, sleep_ms
 pin = 14
 led = 12
 strip = machine.Neopixel(machine.Pin(pin), led, 0)
@@ -54,7 +54,7 @@ def rainbowCycle(wait=0.00):
     _thread.allowsuspend(True)
     print("started rainbow")
     for j in range (256): #5 cycles of all colors on wheel
-        #print("cycle {}".format(j))
+        print("cycle {}".format(j))
         ntf = _thread.getnotification()
         if ntf == _thread.EXIT:
             print("exiting rainbow")
@@ -218,11 +218,10 @@ def setPixelHeatColor(pixel, temp):
 # --------------fire - end -----------------------
 
 
-def coloredWhatever():
-    setAll(255, 0, 0, 0.5)
-    setAll(0, 0, 0, 0.5)
-    setAll(0, 255, 0, 0.5)
-    setAll(0, 0, 0, 0.5)
+def blink(count = 2):
+    for i in range(2):
+        setAll(255, 230, 17, 0.3)
+        setAll(0, 0, 0, 0.2)
 
 # --------------- meteorRain -------------------------
 
@@ -280,7 +279,7 @@ def thread(val):
         elif val is 3:
             bezier_gradient()
         elif val is 2:
-            coloredWhatever()
+            blink()
         elif val is 1:
             fire()
         else:
@@ -292,9 +291,11 @@ checks if there is a thread running, if it is so it stops the thread and starts 
 value: number of the animation which should start
 '''
 def startAnimThread(value):
-    print("startAnimThread")
+    #print("startAnimThread")
     global lightAnim_thread
+    #thread(value)
     if lightAnim_thread is not 0:
+        print("stopping animThread")
         _thread.notify(lightAnim_thread, _thread.EXIT)
-        sleep_ms(1000)
+        sleep_ms(300)
     lightAnim_thread = _thread.start_new_thread("startThread", thread, (value,))
