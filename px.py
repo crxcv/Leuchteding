@@ -6,6 +6,8 @@ strip = machine.Neopixel(machine.Pin(pin), led, 0)
 fact_cache = {}
 threecolors = {"#00173d", "#f75002", "#01f2f7"}
 
+lightAnim_thread = 0
+
 #for fire function
 w, h = 3, int(led/2)
 #oldColor = [[ 0x00 for x in range (w)] for y in range(h)]
@@ -270,20 +272,29 @@ def off():
     for i in range (led):
         strip.set(i, 0x00)
 
+def thread(val):
+    print("started thread {}".format(val))
+    while True:
+        if val is 4:
+            rainbowCycle()
+        elif val is 3:
+            bezier_gradient()
+        elif val is 2:
+            coloredWhatever()
+        elif val is 1:
+            fire()
+        else:
+            off()
 
+'''
+checks if there is a thread running, if it is so it stops the thread and starts a new one
+
+value: number of the animation which should start
+'''
 def startAnimThread(value):
-
-    def thread(val):
-        print("started thread")
-        while True:
-            if val is 4:
-                rainbowCycle()
-            elif val is 3:
-                bezier_gradient()
-            elif val is 2:
-                coloredWhatever()
-            elif val is 1:
-                fire()
-            else:
-                off()
-    return _thread.start_new_thread("startThread", thread, (value,))
+    print("startAnimThread")
+    global lightAnim_thread
+    if lightAnim_thread is not 0:
+        _thread.notify(lightAnim_thread, _thread.EXIT)
+        sleep_ms(1000)
+    lightAnim_thread = _thread.start_new_thread("startThread", thread, (value,))

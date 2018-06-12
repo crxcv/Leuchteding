@@ -1,36 +1,33 @@
 from machine import Pin, TouchPad, ADC, DAC, PWM, RTC
 from time import sleep_ms
-import _thread, gc
-import connectSTA_AP
-#import webSrv as server
 import px as px
+import _thread
+import connectSTA_AP
 from microWebSrv import MicroWebSrv
 import _thread
 
-srv_run_in_thread = False
-
-
 #connect to wifi or create access point
 connectSTA_AP.connect()
-
-#start webServer
-#server.start()
-
 oldLightCase = 0
 lightCase = 0
 lightAnim_thread = 0
-lightMax = 5
+#lightMax = 5
 
-_thread.replAcceptMsg(True)
+#webServer
+srv_run_in_thread = True
+
+
+#_thread.replAcceptMsg(True)
 
 #touch sensor configuration
-touchLight = TouchPad(Pin(27))
-touchLight.config(600)
-touchThreshold = touchLight.read() - 400
+#touchLight = TouchPad(Pin(27))
+#touchLight.config(600)
+#touchThreshold = touchLight.read() - 400
 
 #light resistor configuration
-ldr = ADC(Pin(36, Pin.IN))
+#ldr = ADC(Pin(36, Pin.IN))
 
+#route handler for http-post requests
 @MicroWebSrv.route('/', 'POST')
 def _httpHandlerPost(httpClient, httpResponse) :
     formData = httpClient.ReadRequestPostedFormData()
@@ -47,44 +44,46 @@ def _httpHandlerPost(httpClient, httpResponse) :
         lightCase = 1
     else:
         lightCase = 0
-    print("server lightcase: {}".format(lightCase))
+
+    print("lightCase: {}".format(lightCase))
+    #px.startAnimThread(lightCase)
+    #handleLightThread(lightCase)
+    #start light animation in a seperate thread
+
     httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
-
-
 
 def handleLightThread(val):
     global lightAnim_thread
+    print("handleLightThread")
     if lightAnim_thread is not 0:
         _thread.notify(lightAnim_thread, _thread.EXIT)
         sleep_ms(1000)
-    #lightAnim_thread = _thread.start_new_thread("pixels", px.startAnimThread, (val,))
-    lightAnim_thread = px.startAnimThread(val)
+    px.startAnimThread(val)
 
-#global lightCase
-#global oldLightCase
-handleLightThread(0)
-
-#create server instance and start server
-srv = MicroWebSrv(webPath = 'www')
-srv.Start(threaded = srv_run_in_thread, stackSize= 8192)
-
-
-while True:
-    #print("main lightCase: {}".format(lightCase))
-
-    touchval = touchLight.read()
+#def touch():
+    #global touchLight
+    #touchval = touchLight.read()
+    #print("route: /")
     #ldrVal = ldr.read()
     #server.setLightCase(lightCase)
     #sleep_ms(100)
     #lightCase = server.getLightCase()
-    if touchval < touchThreshold and touchval > 100:
-        print("touched")
-        lightCase = [lightCase +1, 0][lightCase+1 >= lightMax]
-        sleep_ms(500)
+    #if touchval < touchThreshold and touchval > 100:
+    #    lightCase = [lightCase +1, 0][lightCase+1 >= lightMax]
+    #    sleep_ms(500)
+
+    #if lightCase is not oldLightCase:
+    #    oldLightCase = lightCase
+    #    handleLightThread(lightCase)
+
+handleLightThread(0)
+srv = MicroWebSrv(webPath = 'www')
+srv.Start(threaded = srv_run_in_thread, stackSize= 8192)
+while True:
+    print("mainloop")
+    sleep_ms(500)
 
     if lightCase is not oldLightCase:
+        print("lightCase changed: {}".format(lightCase))
         oldLightCase = lightCase
-        handleLightThread(lightCase)
-    gc.collect()
-#mainThread = _thread.start_new_thread("main", mainThread, ())
-#mainThread()
+        px.startAnimThread(lightCase)

@@ -19,6 +19,7 @@ def connect():
     if not sta_if.isconnected():
         ap_if.active(True)
         sta_if.connect(STA_SSID, STA_PSK)
+        print("creating accesspoint")
         # if not sta_if.isconnected():
         ap_if.config(essid = ssid)
         ap_if.config(password = pw)

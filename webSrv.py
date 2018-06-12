@@ -1,21 +1,22 @@
 from microWebSrv import MicroWebSrv
 import _thread
+import px as px
 
-srv_run_in_thread = True
-lightC = 0
+srv_run_in_thread = False
+global lightCase
+global lightAnim_thread
 
-def getLightCase():
-    return lightC
-
-def setLightCase(lCase):
-    global lightC
-    lightC = lCase
+def handleLight(val):
+    global lightAnim_thread
+    if lightAnim_thread is not 0:
+        _thread.notify(lightAnim_thread, _thread.EXIT)
+        sleep_ms(1000)
+    lightAnim_thread = px.startAnimThread(val)
 
 @MicroWebSrv.route('/', 'POST')
 def _httpHandlerPost(httpClient, httpResponse) :
     formData = httpClient.ReadRequestPostedFormData()
     light = formData["light"]
-    global lightCase
 
     if "RainbowCycle" in light:
         lightCase = 4
@@ -27,7 +28,10 @@ def _httpHandlerPost(httpClient, httpResponse) :
         lightCase = 1
     else:
         lightCase = 0
-    print("server lightcase: {}".format(lightCase))
+
+    global lightAnim_thread
+    #lightAnim_thread = px.startAnimThread(val)
+
     httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
 
 #@MicroWebSrv.route('/alarm')
