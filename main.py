@@ -14,16 +14,26 @@ lightCase = 0
 lightAnim_thread = 0
 #lightMax = 5
 
-#webServer
-srv_run_in_thread = True
-
-
 #_thread.replAcceptMsg(True)
 
+#interruptHandler for touchLight pin
+def touchLightCallback(touchLight):
+    global lightCase
+    global touchThreshold
+    lightCase = lightCase +1
+
 #touch sensor configuration
-#touchLight = TouchPad(Pin(27))
-#touchLight.config(600)
-#touchThreshold = touchLight.read() - 400
+touchLight = TouchPad(Pin(27))
+#thresholdLight=[]
+#for i in range(6):
+#    thresholdLight.append(touchLight.read())
+#    sleep_ms(100)
+touchThreshold = touchLight.read()#sum(thresholdLight)//len(thresholdLight)
+touchLight.config(600)
+
+#interruptRequest for touchLight Pin
+#touchLight.irq(trigger=Pin.IRQ_FALLING, handler=touchLightCallback)
+
 
 #light resistor configuration
 #ldr = ADC(Pin(36, Pin.IN))
@@ -46,11 +56,6 @@ def _httpHandlerPost(httpClient, httpResponse) :
     else:
         lightCase = 0
 
-    print("lightCase: {}".format(lightCase))
-    #px.startAnimThread(lightCase)
-    #handleLightThread(lightCase)
-    #start light animation in a seperate thread
-
     httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
 
 def handleLightThread(val):
@@ -63,28 +68,20 @@ def handleLightThread(val):
     px.startAnimThread(val)
 
 
-#def touch():
-    #global touchLight
-    #touchval = touchLight.read()
-    #print("route: /")
-    #ldrVal = ldr.read()
-    #server.setLightCase(lightCase)
-    #sleep_ms(100)
-    #lightCase = server.getLightCase()
-    #if touchval < touchThreshold and touchval > 100:
-    #    lightCase = [lightCase +1, 0][lightCase+1 >= lightMax]
-    #    sleep_ms(500)
-
-    #if lightCase is not oldLightCase:
-    #    oldLightCase = lightCase
-    #    handleLightThread(lightCase)
-
 handleLightThread(0)
+
+#start server in thread
+srv_run_in_thread = True
 srv = MicroWebSrv(webPath = 'www')
 srv.Start(threaded = srv_run_in_thread, stackSize= 8192)
+
 while True:
-    #print("mainloop")
-    sleep_ms(100)
+    touchval = touchLight.read()
+    touchLightRatio = touchval / touchThreshold
+    if .40 < touchLightRatio < .8:
+        lightCase =lightCase +1
+        sleep_ms(200)
+
 
     if lightCase is not oldLightCase:
         print("lightCase changed: {}".format(lightCase))

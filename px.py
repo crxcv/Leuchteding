@@ -3,6 +3,7 @@ from time import sleep, sleep_ms
 pin = 14
 led = 12
 strip = machine.Neopixel(machine.Pin(pin), led, 0)
+strip.brightness(128, update=True)
 fact_cache = {}
 threecolors = {"#00173d", "#f75002", "#01f2f7"}
 
@@ -67,8 +68,9 @@ def rainbowCycle(wait=0.00):
             #print("converting to int")
             colInt = int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB]))
             #print("strip.set")
-            strip.set(i, colInt)
+            strip.set(i, colInt, update=False)
             #print("set led {}".format(i))
+        strip.show()
 
         sleep(wait)
     gc.collect()
@@ -103,7 +105,7 @@ def bernstein(t,n,i):
 
 def bezier_gradient(colors=None, n_out=None):
     _thread.allowsuspend(True)
-    #print("bezier")
+    print("gradient")
     ''' Returns a "bezier gradient" dictionary
         using a given list of colors as control
         points. Dictionary also contains control
@@ -145,8 +147,9 @@ def bezier_gradient(colors=None, n_out=None):
         for t in range(n_out)
     ]
     for n in range(len(gradient)):
-        strip.set(n,  gradient[n])
-        strip.set((led-1-n), gradient[n])
+        strip.set(n,  gradient[n], update=False)
+        strip.set((led-1-n), gradient[n], update=False)
+    strip.show()
 
     #{"#00173d", "#f75002", "#01f2f7"}
     #for col in colors:
@@ -164,6 +167,7 @@ def bezier_gradient(colors=None, n_out=None):
 def fire(cooling = 70, sparkling = 140, speedDelay = 0.0):
     #w, h = 3, led
     _thread.allowsuspend(True)
+    print("fire")
     heat = [0x00 for x in range(int(led/2), 0, -1)]
     cooldown = 0
     #while True:
@@ -194,6 +198,7 @@ def fire(cooling = 70, sparkling = 140, speedDelay = 0.0):
         #setPixelHeatColor(j, heat[j])
         setPixelHeatColor(int(led/2)-j, heat[j])
         setPixelHeatColor(int(led/2)+j, heat[j])
+    strip.show()
     gc.collect()
 
 def setPixelHeatColor(pixel, temp):
@@ -214,21 +219,17 @@ def setPixelHeatColor(pixel, temp):
         val = [heatramp, 0, 0]
     RGB = [int(x) for x in val]
     colInt = int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB]))
-    strip.set(pixel, colInt)
+    strip.set(pixel, colInt, update=False)
 # --------------fire - end -----------------------
 
-
-def blink(count = 2):
-    for i in range(2):
-        setAll(255, 230, 17, 0.3)
-        setAll(0, 0, 0, 0.2)
 
 # --------------- meteorRain -------------------------
 
 def setAll(red, green, blue, wait = 0.0):
-    for i in range (led):
-        strip.set(i, int(RGB_to_hex([red, green, blue])))
-        #rsleep(wait)
+    #for i in range (led):
+    strip.set(0, int(RGB_to_hex([red, green, blue])), num=led )
+    #strip.show()
+    sleep(wait)
 
 
 def fadeToBlack(ledNo, fadeValue):
@@ -243,12 +244,12 @@ def fadeToBlack(ledNo, fadeValue):
     r= 0 if (r<=10) else int(r-(r*fadeValue/256))
     g= 0 if (g<=10) else int(g-(g*fadeValue/256))
     b= 0 if (b<=10) else int(b-(b*fadeValue/256))
-    strip.set(ledNo, RGB_to_hex(r,g,b))
+    strip.set(ledNo, RGB_to_hex(r,g,b), update=False)
 
 #0xff,0xff,0xff,7, 255, True, 0.00030
 def meteorRain(red=0xff, green=0xff, blue=0xff, meteorSize = 7, meteorTrailDecay = 255, meteorRandomDecay = True, speedDelay = 0.00030):
     _thread.allowsuspend(True)
-
+    print("meteorRain")
     setAll(0x00, 0x00, 0x00)
 
     for i in range (led):
@@ -259,10 +260,12 @@ def meteorRain(red=0xff, green=0xff, blue=0xff, meteorSize = 7, meteorTrailDecay
         for j in range (led):
             if (not meteorRandomDecay) or random.randint(0,10) > 5 :
                 fadeToBlack(j, meteorTrailDecay)
+        strip.show()
 
         for j in range (meteorSize):
             if i-j < led and i-j >= 0:
-                strip.set(i-j, RGB_to_hex(red, green, blue))
+                strip.set(i-j, RGB_to_hex(red, green, blue), update=False)
+        strip.show()
         sleep(speedDelay)
 # ------------------ meteor end ----------------------------------
 
@@ -271,19 +274,33 @@ def off():
     for i in range (led):
         strip.set(i, 0x00)
 
+'''
+let all led blink for count times
+
+@val count: how many times the leds blink. default= 2
+
+'''
+def blink(count = 2):
+    for i in range(2):
+        setAll(255, 230, 17, wait=0.5)
+        setAll(0, 0, 0, wait=0.3)
+
+
+
 def thread(val):
+    val = val % 5
     print("started thread {}".format(val))
-    while True:
-        if val is 4:
-            rainbowCycle()
-        elif val is 3:
-            bezier_gradient()
-        elif val is 2:
-            blink()
-        elif val is 1:
-            fire()
-        else:
-            off()
+    #while True:
+    if val is 4:
+        rainbowCycle()
+    elif val is 3:
+        bezier_gradient()
+    elif val is 2:
+        blink()
+    elif val is 1:
+        fire()
+    else:
+        off()
 
 '''
 checks if there is a thread running, if it is so it stops the thread and starts a new one
