@@ -1,10 +1,10 @@
-from machine import Pin, TouchPad, ADC, DAC, PWM, RTC
+from machine import Pin, TouchPad, ADC, DAC, PWM, RTC, resetWDT
 from time import sleep_ms
 import px as px
-import _thread
+import _thread, gc
 import connectSTA_AP
-from microWebSrv import MicroWebSrv
-import _thread
+#from microWebSrv import MicroWebSrv
+import microWebSrv
 
 #connect to wifi or create access point
 connectSTA_AP.connect()
@@ -38,9 +38,21 @@ touchLight.config(600)
 #light resistor configuration
 #ldr = ADC(Pin(36, Pin.IN))
 
+@microWebSrv.MicroWebSrv.route('/')
+def _httpHandler(httpClient, httpResponse):
+    gc.collect()
+    before = gc.mem_free()
+    httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
+    after = gc.mem_free()
+    print("server uses {} bytes".format(after-before))
+    gc.collect()
+
+
 #route handler for http-post requests
-@MicroWebSrv.route('/', 'POST')
+@microWebSrv.MicroWebSrv.route('/', 'POST')
 def _httpHandlerPost(httpClient, httpResponse) :
+    #gc.collect()
+    #before = gc.mem_free()
     formData = httpClient.ReadRequestPostedFormData()
     light = formData["light"]
     global lightCase
@@ -58,25 +70,38 @@ def _httpHandlerPost(httpClient, httpResponse) :
 
     httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
 
+    #after = gc.mem_free()
+    #print("server uses {} bytes".format(after-before))
+    #gc.collect()
+
 def handleLightThread(val):
     global lightAnim_thread
+    global threadID
     print("handleLightThread")
-    #if lightAnim_thread is not 0:
-    #    _thread.notify(lightAnim_thread, _thread.EXIT)
-    #    sleep_ms(1000)
-    #lightAnim_thread = _thread.start_new_thread("lightAnim", px.thread, (val,))
-    px.startAnimThread(val)
+
+    #print("server thread suspended")
+    if lightAnim_thread is not 0:
+        _thread.notify(lightAnim_thread, _thread.EXIT)
+    sleep_ms(1000)
+    lightAnim_thread = _thread.start_new_thread("lightAnim", px.thread, (val,threadID))
+    #px.thread(val)
 
 
-handleLightThread(0)
 
 #start server in thread
 srv_run_in_thread = True
-srv = MicroWebSrv(webPath = 'www')
-srv.Start(threaded = srv_run_in_thread, stackSize= 8192)
+srv = microWebSrv.MicroWebSrv(webPath = 'www')
 
+print("Server...")
+srv.Start(threaded = srv_run_in_thread, stackSize= 8192)
+print("...started")
+threadID = 0# srv.threadID()
 while True:
+    resetWDT()
+    #print("reading touchpad")
     touchval = touchLight.read()
+    #print("...done")
+    sleep_ms(200)
     touchLightRatio = touchval / touchThreshold
     if .40 < touchLightRatio < .8:
         lightCase =lightCase +1
