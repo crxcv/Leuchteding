@@ -2,7 +2,7 @@ from machine import Pin, TouchPad, ADC, DAC, PWM, RTC, Timer, resetWDT
 from time import sleep_ms
 import px as px
 import _thread, gc, utime
-import connectSTA_AP, alarmSite
+import connectSTA_AP, songs
 from microWebSrv import MicroWebSrv
 
 
@@ -22,12 +22,15 @@ setByServer = False
 alarmTime = (0,0)
 currMillis = 0
 lastMillis = 0
+timerCounterMillis = 0
+millisToAlarm = 0
 
 
 oldLightCase = 0
 lightCase = 0
 lightAnim_thread = 0
 #lightMax = 5
+music_thread = 0
 
 #_thread.replAcceptMsg(True)
 
@@ -89,100 +92,9 @@ def _httpHandlerPost(httpClient, httpResponse) :
     #after = gc.mem_free()
     #print("server uses {} bytes".format(after-before))
     #gc.collect()
+
+
 @MicroWebSrv.route('/alarm')
-def _httpHandlerAlarm(httpClient, httpResponse):
-    global clock
-    #global date
-
-    data = clock.now()
-    html = """\
-        <html lang=de>
-          <head>
-            <title>RainbowWarrior Alarm Settings</title>
-            <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-          </head>
-          <body>
-            <h1>time and alarm config</h1>
-            <p>
-                current time: {}
-            </p>
-            <form method="POST" action="/alarm" id="setTime">
-              <label form="setTime">set current system time</label></br>
-              <label for"year">Year</label>
-              <input type="text" name="year" id="year" maxlength="4">
-
-              <label for"month">Month</label>
-              <input type="text" name="month" id="month" maxlength="2">
-
-              <label for"hour">Hour</label>
-              <input type="text" name="hour" id="hour" maxlength="2">
-
-              <label for"minute">minute</label>
-              <input type="text" name="minute" id="minute" maxlength="2">
-            </br>
-              <button type="reset">Eingabe zur&uuml;cksetzen</button>
-              <button type="submit">Eingabe absenden</button>
-            </form>
-            </br>
-            </br>
-            <form method="POST" action="alarm" id="setAlarm">
-              <label form="setAlarm">set Alarm time</label>
-              </br>
-              <label for"hour">Hour</label>
-              <input type="text" name="hour" id="hour" maxlength="2">
-
-              <label for"minute">minute</label>
-              <input type="text" name="minute" id="minute" maxlength="2">
-              </br>
-              <label >
-                <input type="checkbox" name="dailyAlarm" value="dailyAlarm" checked="checked">
-                daily Alarm
-              </label>
-
-              </br>
-              <button type="submit" name = "setAlarm" value ="setAlarm">Eingabe absenden</button>
-            </form>
-          </br></br>
-
-          <form method="POST" action="/alarm" id="setSound">
-            <label form="setSound">Wecksound w&auml;hlen</label>
-          </br>
-          <input type="radio" id="Super Mario - Main Theme" name="setSound" value="MarioMain">
-            <label for="Super Mario - Main Theme"> Super Mario - Main Theme</label> </br>
-
-            <input type="radio" id="Super Mario - Title Music" name="setSound" value="MarioTitle">
-              <label for="Super Mario - Title Music"> Super Mario - Title Music</label> </br>
-
-            <input type="radio" id="Looney" name="setSound" value="Looney">
-              <label for="Looney"> Looney Tunes Theme</label> </br>
-
-            <input type="radio" id="The Simpsons" name="setSound" value="Simpsons">
-              <label for="The Simpsons"> The Simpsons</label> </br>
-
-            <input type="radio" id="Indiana" name="setSound" value="Indiana">
-              <label for="Indiana"> Indiana Jones</label> </br>
-
-            <input type="radio" id="muppets" name="setSound" value="Muppets">
-              <label for="muppets"> The Muppet Show</label> </br>
-
-            <input type="radio" id="Gadget" name="setSound" value="Gadget">
-              <label for="Gadget"> Inspector Gadget</label> </br>
-
-            <input type="radio" id="StarWars" name="setSound" value="StarWars">
-              <label for="StarWars"> Star Wars Theme</label> </br>
-
-            <input type="radio" id="Tetris" name="setSound" value="Tetris">
-              <label for="Tetris"> Tetris Theme</label> </br>
-
-            <button type="button">Song abspielen</button>
-            <button type="submit">Wecksound w&auml;hlen</button>
-          </form>
-
-        </body>
-        </html>""".format(data)    #httpResponse.WriteResponseFile( filepath = "www/alarm.html".append(.format(data)), contentType = 'text/event-stream')
-    httpResponse.WriteResponseOk(   headers         = ({'Cache-Control': 'no-cache'}),   contentType     = 'text/html',contentCharset  = 'UTF-8',content =html)
-
 @MicroWebSrv.route('/alarm', 'POST')
 def _httpHandlerAlarm(httpClient, httpResponse):
     global clock
@@ -201,8 +113,9 @@ def _httpHandlerAlarm(httpClient, httpResponse):
         setAlarm = True
         print("alarm set by srv")
         alarmTime = (int(formData["minute"]) ,int(formData["hour"]))
-
+    #0: year    1: month 2: mday 3: hour 4: min 5: sec 6: weekday 7: yearday
     data = clock.now()
+    #time = str("{0}.{1}.{3} {4}:{5} Uhr".format(data[2], data[1], data[0], data[3], data[4]))
     html ="""\
         <html lang=de>
           <head>
@@ -213,7 +126,7 @@ def _httpHandlerAlarm(httpClient, httpResponse):
           <body>
             <h1>time and alarm config</h1>
             <p>
-                current time: {}
+                {0}.{1}.{2} {3}:{4} Uhr
             </p>
             <form method="POST" action="/alarm" id="setTime">
               <label form="setTime">set current system time</label></br>
@@ -288,7 +201,7 @@ def _httpHandlerAlarm(httpClient, httpResponse):
           </form>
 
         </body>
-        </html>""".format(data)    #httpResponse.WriteResponseFile( filepath = "www/alarm".append(.format(data)), contentType = 'text/event-stream')
+        </html>""".format(data[2], data[1], data[0], data[3], data[4])   #httpResponse.WriteResponseFile( filepath = "www/alarm".append(.format(data)), contentType = 'text/event-stream')
     httpResponse.WriteResponseOk(   headers         = ({'Cache-Control': 'no-cache'}),   contentType     = 'text/html',contentCharset  = 'UTF-8',content =html)
 
 
@@ -300,14 +213,24 @@ def handleLightThread(val):
     #print("server thread suspended")
     if lightAnim_thread is not 0:
         _thread.notify(lightAnim_thread, _thread.EXIT)
-    sleep_ms(1000)
+
     lightAnim_thread = _thread.start_new_thread("lightAnim", px.thread, (val,))
+    sleep_ms(500)
     #px.thread(val)
+
+def handleMusicThread(val):
+    global music_thread
+    if music_thread is not 0:
+        thread.notify(music_thread, _thread.EXIT)
+    music_thread = _thread.start_new_thread("musicThread", songs.find_song, (val,))
+    sleep_ms(500)
+
 
 
 def _handleTimer(timer):
     print("timer triggered")
     handleLightThread(3)
+    handleMusicThread("Tetris")
 
 def setAlarmTime(m, h):
     print("setting alarm time ")
@@ -349,8 +272,7 @@ def setAlarmTime(m, h):
     print("ms to alarm: {}".format(alarm_ms))
     #initialize timer
     timer.init(period=alarm_ms, mode= timer.ONE_SHOT, callback= _handleTimer )
-    #print("...timer initialized")
-
+    return alarm_sec
 
 
 
@@ -377,7 +299,7 @@ while True:
         setByServer = False
     if setAlarm:
         print("alarm: {}".format(setAlarm))
-        setAlarmTime(alarmTime[0], alarmTime[1])
+        millisToAlarm = setAlarmTime(alarmTime[0], alarmTime[1])
         setAlarm = False
     utime.sleep_ms(200)
 
@@ -405,3 +327,8 @@ while True:
             print("lightCase changed: {}".format(lightCase))
             oldLightCase = lightCase
             handleLightThread(lightCase)
+
+    currMillis = utime.time()
+    if (currMillis - timerCounterMillis) >=1000:
+        timerCounterMillis = currMillis
+        print("{} seconds to alarm".format(int(millisToAlarm/1000)))
