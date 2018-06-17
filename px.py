@@ -292,13 +292,14 @@ def off():
 
 
 
-def thread(val, threadID):
+#def thread(val, threadID):
+def thread(val):
     print("started thread {}".format(val))
     #_thread.lock()
     gc.collect()
     before = gc.mem_free()
     val = val % 5
-
+    #_thread.suspend(threadID)
     #while True:
     if val is 4:
         rainbowCycle()
