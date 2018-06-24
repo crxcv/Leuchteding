@@ -9,6 +9,7 @@ import _thread
 from rtttl import RTTTL
 
 piezoPin = 33
+_thread.allowsuspend(True)
 #piezo = PWM(piezoPin)
 
 SONGS = [
@@ -44,10 +45,6 @@ SONGS = [
 
 def play_tone(freq, msec):
     print('freq = {:6.1f} msec = {:6.1f}'.format(freq, msec))
-    ntf = _thread.getnotification()
-    if ntf == _thread.EXIT:
-        gc.collect()
-        return
     if freq >0:
         piezo.freq(int(freq))
         piezo.duty(50)
@@ -65,6 +62,12 @@ def find_song(name):
             tune = RTTTL(song)
             for freq, msec in tune.notes():
                 play_tone(freq, msec)
+                ntf = _thread.getnotification()
+                if ntf == _thread.EXIT:
+                    piezo.deinit()
+                    time.sleep_ms(500)
+                    gc.collect()
+                    return
             piezo.deinit()
 
 

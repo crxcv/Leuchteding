@@ -7,19 +7,6 @@
   </head>
   <body>
     <h1>time and alarm config</h1>
-    <div id="result"> </div>
-
-    <script>
-    if(typeof(EventSource) !== 'undefined'){
-      const source = new EventSource('http://' + window.location.hostname + '/alarm');
-      source.onmessage = function(e){
-        document.getElementById("result").innerHTML = e.data;
-      };
-    } else{
-      document.getElementById("result").innerHTML = "sorry. your browser doesn't support server-sent events...";
-    }
-
-    </script>
     <form method="POST" action="/alarm" id="setTime">
       <label form="setTime">set current system time</label></br>
       <label for"year">Year</label>
