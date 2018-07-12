@@ -181,7 +181,7 @@ while True:
             lightCase = 0
         else:
             lightCase = 1
-        sleep_ms(2000)
+        sleep_ms(2500)
 
     if lightCase is not oldLightCase:
         print("lightCase changed: {}".format(lightCase))

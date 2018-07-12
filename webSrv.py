@@ -1,8 +1,10 @@
 from microWebSrv import MicroWebSrv
+import utime
+from time import sleep_ms
 import _thread
 
 srv_run_in_thread = True
-song = "None"
+songName = "None"
 lightPattern = "None"
 date= (0, 0, 0, 0, 0)
 alarmTime = (0, 0)
@@ -44,10 +46,10 @@ def alarm():
 
 def song():
     global newSong
-    global song
+    global songName
     if newSong:
         newSong = False
-        return song
+        return songName
     else:
         return "None"
 
@@ -57,7 +59,7 @@ def _httpHandlerPost(httpClient, httpResponse) :
     global lightPattern
     global newLightPattern
 
-    _thread.lock()
+    #_thread.lock()
     newLightPattern = True
     #gc.collect()
     #before = gc.mem_free()
@@ -65,7 +67,8 @@ def _httpHandlerPost(httpClient, httpResponse) :
     lightPattern = formData["light"]
 
     httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
-    _thread.unlock()
+    #sleep_ms(200)
+    #_thread.unlock()
     #after = gc.mem_free()
     #print("server uses {} bytes".format(after-before))
     #gc.collect()
@@ -74,17 +77,16 @@ def _httpHandlerPost(httpClient, httpResponse) :
 @MicroWebSrv.route('/alarm')
 @MicroWebSrv.route('/alarm', 'POST')
 def _httpHandlerAlarm(httpClient, httpResponse):
-    _thread.lock()
-    #global clock
+    #_thread.lock()
     global date
-    global song
+    global songName
     global newSong
     global newAlarm
     global alarmTime
     global newDate
     global newTime
     formData = httpClient.ReadRequestPostedFormData()
-    print(formData)
+    #print(formData)
     if "setTime" in formData:
         #string formatting:
         # >>> '%0.2d' %(3)
@@ -113,11 +115,13 @@ def _httpHandlerAlarm(httpClient, httpResponse):
 
     if "setSound" in formData:
         newSong = True
-        song = formData["setSound"]
-        #print (formData)
+        songName = formData["setSound"]
+
+    print (formData)
 
     #0: year    1: month 2: mday 3: hour 4: min 5: sec 6: weekday 7: yearday
-    data = machine.Timer.now()
+    data = utime.localtime()
+    print(data)
     #time = str("{0}.{1}.{3} {4}:{5} Uhr".format(data[2], data[1], data[0], data[3], data[4]))
     html ="""\
         <html lang=de>
@@ -129,14 +133,14 @@ def _httpHandlerAlarm(httpClient, httpResponse):
           <body>
             <h1>time and alarm config</h1>
             <p>
-                {0}.{1}.{2} {3}:{4} Uhr
+                {0:02d}.{1:02d}.{2:02d} {3:02d}:{4:02d} Uhr
             </p>
             <form method="POST" action="/alarm" id="setTime">
               <label form="setTime">Systemzeit einstellen</label></br>
               <label for"year">Datum</label>
-              <input type="text" name="date" id="date" value = "{0}.{1}.{2}">
+              <input type="text" name="date" id="date" value = "{0:02d}.{1:02d}.{2:02d}">
               <label for"time">Uhrzeit</label>
-              <input type="text" name="time" id="time" value="{3}:{4}">
+              <input type="text" name="time" id="time" value="{3:02d}:{4:02d}">
             </br>
               <button type="reset">Eingabe zur&uuml;cksetzen</button>
               </br>
@@ -148,7 +152,7 @@ def _httpHandlerAlarm(httpClient, httpResponse):
               <label form="setAlarm">Weckzeit einstellen</label>
               </br>
               <label for"alarmTime">Uhrzeit</label>
-              <input type="text" name="alarmTime" id="alarmTime" value="{3}:{4}" >
+              <input type="text" name="alarmTime" id="alarmTime" value="{3:02d}:{4:02d}" >
               </br>
               <label >
                 <input type="checkbox" name="dailyAlarm" value="dailyAlarm" checked="checked">
@@ -190,7 +194,6 @@ def _httpHandlerAlarm(httpClient, httpResponse):
             <input type="radio" id="Tetris" name="setSound" value="Tetris">
               <label for="Tetris"> Tetris Theme</label> </br>
 
-            <button type="button">Song abspielen</button>
             <button type="submit">Wecksound w&auml;hlen</button>
           </form>
 
@@ -200,7 +203,7 @@ def _httpHandlerAlarm(httpClient, httpResponse):
                                     contentType     = 'text/html',
                                     contentCharset  = 'UTF-8',
                                     content =html)
-    _thread.unlock()
+    #_thread.unlock()
 
 def start():
     #create server instance and start server
