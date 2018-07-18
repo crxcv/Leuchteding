@@ -144,7 +144,7 @@ def _httpHandlerAlarm(httpClient, httpResponse):
               <label form="setAlarm">Weckzeit einstellen</label>
               </br>
               <label for"alarmTime">Uhrzeit</label>
-              <input type="text" name="alarmTime" id="alarmTime" value="{3}:{4}" >
+              <input type="text" name="alarmTime" id="alarmTime" value="{3:02.02d}:{4:02.02d}" >
               </br>
               <label >
                 <input type="checkbox" name="dailyAlarm" value="dailyAlarm" checked="checked">
@@ -175,8 +175,8 @@ def _httpHandlerAlarm(httpClient, httpResponse):
               <label for="StarWars"> Star Wars Theme</label> </br>
             <input type="radio" id="Tetris" name="setSound" value="Tetris">
               <label for="Tetris"> Tetris Theme</label> </br>
-            <button type="submit" id="setSongButton" value="setSong">Song abspielen</button>
-            <button type="submit" id="playSongButton" value="playSong">Wecksound w&auml;hlen</button>
+            <button type="submit" name="setSongButton" value="setSong">Song abspielen</button>
+            <button type="submit" name="playSongButton" value="playSong">Wecksound w&auml;hlen</button>
           </form>
         </body>
         </html>""".format(date[2], date[1], date[0], date[3], date[4])#.format(0, 1, 2, 3,4, 5)#
