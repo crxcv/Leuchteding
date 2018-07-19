@@ -340,6 +340,8 @@ def thread(val):
         fire()
     elif val is 1:
         rainbow()
+    elif val is 0:
+        off()
     else:
         setAll(23, 230, 180, 255)
     after = gc.mem_free()

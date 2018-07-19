@@ -72,7 +72,7 @@ def handleMusicThread(val):
     '''stops current musicThread if runing and starts a new one with given value
     '''
     global music_thread
-    if music_thread is not 0:
+    if (val is 0 or music_thread is not 0):
         _thread.notify(music_thread, _thread.EXIT)
         time.sleep_ms(1000)
     music_thread = _thread.start_new_thread("musicThread", songs.find_song, (val,))
@@ -86,7 +86,7 @@ def _handleTimer(timer):
     print("ALARM!")
     alarm = False
     countTime = False
-    handleLightThread(3)
+    handleLightThread(4)
     handleMusicThread("Tetris")
 
 def setAlarmTime(h, m):
@@ -158,16 +158,18 @@ while True:
         #touchSensor disables alarm
         #IMPORTANT!!! add snooze function by counting how many seconds sensor was touched
         if alarm: #newAlarm:
+            print("aborting alarm")
             handleLightThread(0)
             handleMusicThread(0)
             timer.deinit()
+            time.sleep_ms(300)
         #if no alarm is currently running, increase lightCase by one to toggle through lightAnimations
         else:
-            lightCase =lightCase +1
-        time.sleep_ms(200)
+            lightCase += 1
+        #time.sleep_ms(200)
 
     #check if lightAnim was set on website. returns "None" if none was set
-    light = srv.light()
+    light = srv.getLight()
     if light is not "None":
         print("light changed by webserver: {}".format(light))
         if "RainbowCycle" in light:
@@ -200,21 +202,22 @@ while True:
 
 
     #check if a new song was set on website, gets "None" if not
-    song = srv.song()
+    song = srv.getSong()
     if song is not "None":
         print("song set to: {}".format(song))
+        time.sleep_ms(300)
         handleMusicThread(song)
-        time.sleep_ms(200)
+
 
     #check if systemTime was changed on website
-    newTime = srv.time()
+    newTime = srv.getTime()
     if newTime is not "None":
         clock.init(newTime)
         print("initialized new time: {}".format(newTime))
         newTime = False
 
     #check if alarmTime was set on website
-    newAlarm = srv.alarm()
+    newAlarm = srv.getAlarm()
     if newAlarm is not "None":
         millisToAlarm = setAlarmTime(int(newAlarm[0]), int(newAlarm[1]))
         newAlarm = False

@@ -1,18 +1,19 @@
 from microWebSrv import MicroWebSrv
 import _thread
-import time
+import time, utime
+from machine import RTC
 srv_run_in_thread = True
 song = "None"
 lightPattern = "None"
-date= (0, 0, 0, 0, 0)
-alarmTime = (0, 0)
+date= utime.localtime()#(0, 0, 0, 0, 0)
+alarmTime = (date[3], date[4])
 newTime = False
 newAlarm = False
 newSong = False
 
 newLightPattern = False
 
-def light():
+def getLight():
     global newLightPattern
     global lightPattern
 
@@ -22,7 +23,7 @@ def light():
     else:
         return "None"
 
-def song():
+def getSong():
     global newSong
     global song
     if newSong:
@@ -33,7 +34,7 @@ def song():
         return "None"
 
 
-def time():
+def getTime():
     global newTime
     global date
 
@@ -43,7 +44,7 @@ def time():
     else:
         return "None"
 
-def alarm():
+def getAlarm():
     global newAlarm
     global alarmTime
 
@@ -81,6 +82,8 @@ def _httpHandlerAlarm(httpClient, httpResponse):
     global newTime
     formData = httpClient.ReadRequestPostedFormData()
     print(formData)
+    date = utime.localtime()
+
     if "time" in formData:
         #string formatting:
         # >>> '%0.2d' %(3)
@@ -144,7 +147,7 @@ def _httpHandlerAlarm(httpClient, httpResponse):
               <label form="setAlarm">Weckzeit einstellen</label>
               </br>
               <label for"alarmTime">Uhrzeit</label>
-              <input type="text" name="alarmTime" id="alarmTime" value="{3:02.02d}:{4:02.02d}" >
+              <input type="text" name="alarmTime" id="alarmTime" value="{5:02.02d}:{6:02.02d}" >
               </br>
               <label >
                 <input type="checkbox" name="dailyAlarm" value="dailyAlarm" checked="checked">
@@ -179,7 +182,7 @@ def _httpHandlerAlarm(httpClient, httpResponse):
             <button type="submit" name="playSongButton" value="playSong">Wecksound w&auml;hlen</button>
           </form>
         </body>
-        </html>""".format(date[2], date[1], date[0], date[3], date[4])#.format(0, 1, 2, 3,4, 5)#
+        </html>""".format(date[2], date[1], date[0], date[3], date[4], alarmTime[0], alarmTime[1])#.format(0, 1, 2, 3,4, 5)#
     httpResponse.WriteResponseOk(   headers         = ({'Cache-Control': 'no-cache'}),
                                     contentType     = 'text/html',
                                     contentCharset  = 'UTF-8',
