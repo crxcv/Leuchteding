@@ -1,5 +1,5 @@
 from machine import Pin, TouchPad, ADC, DAC, PWM, RTC, Timer, resetWDT
-from time import sleep_ms
+import time
 import px as px
 import _thread, gc, utime
 import connectSTA_AP, songs
@@ -10,7 +10,7 @@ px.blink(count=1)
 
 #connect to wifi or create access point
 connectSTA_AP.connect()
-sleep_ms(200)
+time.sleep_ms(200)
 #create realTimeClock instance and synchronize with online clock if possible
 clock= RTC()
 date = clock.now()
@@ -21,13 +21,11 @@ newTime = False
 newSong = False
 alarm = False
 alarmTime = (0,0)
-currSecnds = 0
-lastSecnds = 0
+currMs = 0
+lastMs = 0
 timeCounterSecnds = 0
 millisToAlarm = 0
 countTime = True
-
-
 
 oldLightCase = 0
 lightCase = 0
@@ -48,28 +46,16 @@ def touchLightCallback(touchLight):
 #touch sensor configuration
 touchLight = TouchPad(Pin(4))
 
-
-
-#thresholdLight=[]
-#for i in range(6):
-#    thresholdLight.append(touchLight.read())
-#    sleep_ms(100)
 touchThreshold = touchLight.read()#sum(thresholdLight)//len(thresholdLight)
 #touchLight.config(600)
-
-#interruptRequest for touchLight Pin
-#touchLight.irq(trigger=Pin.IRQ_FALLING, handler=touchLightCallback)
 
 
 #light resistor configuration
 #ldr = ADC(Pin(36, Pin.IN))
 
-
-
-
-
-
 def handleLightThread(val):
+    '''stops current running light animation and starts new one with given value
+    '''
     global lightAnim_thread
     global threadID
     print("handleLightThread")
@@ -77,30 +63,36 @@ def handleLightThread(val):
     #print("server thread suspended")
     if lightAnim_thread is not 0:
         _thread.notify(lightAnim_thread, _thread.EXIT)
-        sleep_ms(1000)
+        time.sleep_ms(1000)
     lightAnim_thread = _thread.start_new_thread("lightAnim", px.thread, (val,))
-    #sleep_ms(500)
+    time.sleep_ms(500)
     #px.thread(val)
 
 def handleMusicThread(val):
+    '''stops current musicThread if runing and starts a new one with given value
+    '''
     global music_thread
     if music_thread is not 0:
         _thread.notify(music_thread, _thread.EXIT)
-        sleep_ms(1000)
+        time.sleep_ms(1000)
     music_thread = _thread.start_new_thread("musicThread", songs.find_song, (val,))
-    #sleep_ms(500)
-
-
+    #time.sleep_ms(500)
 
 def _handleTimer(timer):
+    '''timerhandler to starts thread(s) if alarmTime is now
+    '''
     global countTime
     global alarm
+    print("ALARM!")
     alarm = False
     countTime = False
     handleLightThread(3)
     handleMusicThread("Tetris")
 
 def setAlarmTime(h, m):
+    '''
+    calculates millis to next alarm and creates timer instance
+    '''
     print("setting alarm time ")
     global clock
     global alarmTime
@@ -145,7 +137,7 @@ def setAlarmTime(h, m):
     global countTime
     countTime = True
 
-    return alarm_sec
+    return alarm_ms
 
 
 
@@ -157,18 +149,27 @@ while True:
 
     touchval = touchLight.read()
     #print("...done")
-    #sleep_ms(200)
+    #time.sleep_ms(200)
+    #read the touch sensor and check if it was touched
     touchLightRatio = touchval / touchThreshold
     if .40 < touchLightRatio < .8:
         print("touched!")
+        #if alarm is set to True it means alarm is currently running
+        #touchSensor disables alarm
+        #IMPORTANT!!! add snooze function by counting how many seconds sensor was touched
         if alarm: #newAlarm:
             handleLightThread(0)
+            handleMusicThread(0)
             timer.deinit()
+        #if no alarm is currently running, increase lightCase by one to toggle through lightAnimations
+        else:
+            lightCase =lightCase +1
+        time.sleep_ms(200)
 
-        lightCase =lightCase +1
-        sleep_ms(200)
+    #check if lightAnim was set on website. returns "None" if none was set
     light = srv.light()
     if light is not "None":
+        print("light changed by webserver: {}".format(light))
         if "RainbowCycle" in light:
             lightCase = 5
         elif "ColorGradient" in light:
@@ -181,42 +182,49 @@ while True:
             lightCase = 0
         else:
             lightCase = 1
-        sleep_ms(2000)
+        #time.sleep for more than one second is important, else system will crash
+        time.sleep_ms(2000)
 
+    #check if lightCase has changed to know if new lightAnim should be started
     if lightCase is not oldLightCase:
         print("lightCase changed: {}".format(lightCase))
         oldLightCase = lightCase
         handleLightThread(lightCase)
-        sleep_ms(200)
+        time.sleep_ms(1000)
+
+    #synch systemTime online if not done yet.
+#    if not clock.synced():
+#        clock.ntp_sync(server="hr.pool.ntp.org", tz="CET-1CEST")
+#        print("current time: {}".format(clock.now()))
+#        time.sleep_ms(400)
 
 
-    if not clock.synced():
-        clock.ntp_sync(server="hr.pool.ntp.org", tz="CET-1CEST")
-        print("current time: {}".format(clock.now()))
-        sleep_ms(400)
-
+    #check if a new song was set on website, gets "None" if not
     song = srv.song()
     if song is not "None":
         print("song set to: {}".format(song))
         handleMusicThread(song)
-        sleep_ms(200)
+        time.sleep_ms(200)
 
+    #check if systemTime was changed on website
     newTime = srv.time()
-    if newTime:
+    if newTime is not "None":
         clock.init(newTime)
+        print("initialized new time: {}".format(newTime))
         newTime = False
 
+    #check if alarmTime was set on website
     newAlarm = srv.alarm()
-    if newAlarm:
+    if newAlarm is not "None":
         millisToAlarm = setAlarmTime(int(newAlarm[0]), int(newAlarm[1]))
         newAlarm = False
-    #sleep_ms(400)
+    #time.sleep_ms(400)
 
-    currSecnds = utime.mktime(clock.now())
-    #print(currSecnds)
-    if (currSecnds - timeCounterSecnds) >=1:
-        timeCounterSecnds = currSecnds
-
+    #get current systemTime in milliseconds
+    currMs = time.ticks_ms()
+    if time.ticks_diff(time.ticks_ms(), lastMs) >=1000:
+        lastMs = time.ticks_ms()
         if alarm:
             print("{} seconds to alarm".format(int(millisToAlarm/1000)))
-    sleep_ms(100)
+            millisToAlarm = millisToAlarm -1000
+    time.sleep_ms(300)

@@ -1,15 +1,16 @@
+
 import  machine, math, random, gc
 import _thread
 from time import sleep, sleep_ms
 pin = 14
-led = 11#12
-strip = machine.Neopixel(pin=machine.Pin(pin), pixels=led, type=1)
+led = 60#12
+strip = machine.Neopixel(pin=machine.Pin(pin), pixels=led, type=0)
 brightness = 255
-strip.color_order("RGBW")
+strip.color_order("RGB")
 
 strip.brightness(255, update=True)
 fact_cache = {}
-threecolors = {strip.OLIVE, strip.NAVY, strip.TEAL}
+threecolors = {"#0652ce", "#3ff711", "#f72011"}
 
 lightAnim_thread = 0
 _thread.allowsuspend(True)
@@ -166,7 +167,6 @@ def bezier_gradient(colors=None, n_out=None):
 
         return int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in out]))
 
-    #while True:
     ntf = _thread.getnotification()
     if ntf == _thread.EXIT:
         print("exiting bezier thread")
@@ -229,7 +229,7 @@ def fire(cooling = 70, sparkling = 140, speedDelay = 0.0):
         # Step 2: Heat from each cell drifts
         #for k in range(int(led/2)-1, 1, -1):
         for k in range(led-1, 2, -1):
-            print("heat: k= {}".format(k))
+            #print("heat: k= {}".format(k))
             heat[k] = (heat[k-1] +  heat[k-2] + heat[k-2]) / 3
 
         # Step 3 randomly ignite new "sparks" near the bottom
@@ -351,7 +351,6 @@ def thread(val):
 
 '''
 checks if there is a thread running, if it is so it stops the thread and starts a new one
-
 value: number of the animation which should start
 '''
 #def startAnimThread(value):
