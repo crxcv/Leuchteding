@@ -23,9 +23,11 @@ alarm = False
 alarmTime = (0,0)
 currMs = 0
 lastMs = 0
+lastMsLoop = 0
 timeCounterSecnds = 0
 millisToAlarm = 0
-countTime = True
+#gets true if new AlarmTime was set, to print seconds to alarm in terminal
+countTime = False
 
 oldLightCase = 0
 lightCase = 0
@@ -57,13 +59,17 @@ def handleLightThread(val):
     '''stops current running light animation and starts new one with given value
     '''
     global lightAnim_thread
-    global threadID
     print("handleLightThread")
-
     #print("server thread suspended")
-    if lightAnim_thread is not 0:
-        _thread.notify(lightAnim_thread, _thread.EXIT)
-        time.sleep_ms(1000)
+    if lightAnim_thread != 0:
+        print("stopping lightThread")
+        time.sleep_ms(500)
+        #_thread.notify(lightAnim_thread, _thread.EXIT)
+        status = _thread.status(lightAnim_thread)
+        if status is not _thread.TERMINATED:
+            _thread.stop(lightAnim_thread)
+            time.sleep_ms(200)
+        lightAnim_thread = 0
     lightAnim_thread = _thread.start_new_thread("lightAnim", px.thread, (val,))
     time.sleep_ms(500)
     #px.thread(val)
@@ -72,9 +78,11 @@ def handleMusicThread(val):
     '''stops current musicThread if runing and starts a new one with given value
     '''
     global music_thread
-    if (val is 0 or music_thread is not 0):
+    if music_thread is not 0:
+        print("stopping musicThread")
         _thread.notify(music_thread, _thread.EXIT)
-        time.sleep_ms(1000)
+        time.sleep_ms(200)
+        music_thread = 0
     music_thread = _thread.start_new_thread("musicThread", songs.find_song, (val,))
     #time.sleep_ms(500)
 
@@ -84,9 +92,10 @@ def _handleTimer(timer):
     global countTime
     global alarm
     print("ALARM!")
-    alarm = False
+    alarm = True
     countTime = False
     handleLightThread(4)
+    time.sleep_ms(50)
     handleMusicThread("Tetris")
 
 def setAlarmTime(h, m):
@@ -97,9 +106,9 @@ def setAlarmTime(h, m):
     global clock
     global alarmTime
     global timer
-    global alarm
+    global countTime
 
-    alarm = True
+    countTime = True
 
     secondsPerDay = 86400
     secondsPerHour = 3600
@@ -134,19 +143,19 @@ def setAlarmTime(h, m):
     print("ms to alarm: {}".format(alarm_ms))
     #initialize timer
     timer.init(period=alarm_ms, mode= timer.ONE_SHOT, callback= _handleTimer )
-    global countTime
-    countTime = True
 
     return alarm_ms
 
-
+#def wait(timeToWait):
+#    currMs = time.ticks_ms()
+#    if currMs
 
 #start server in thread
 srv.start()
 
 while True:
-    resetWDT()
-
+    #resetWDT()
+    lastMsLoop = time.ticks_ms()
     touchval = touchLight.read()
     #print("...done")
     #time.sleep_ms(200)
@@ -162,6 +171,7 @@ while True:
             handleLightThread(0)
             handleMusicThread(0)
             timer.deinit()
+            alarm = False
             time.sleep_ms(300)
         #if no alarm is currently running, increase lightCase by one to toggle through lightAnimations
         else:
@@ -227,7 +237,7 @@ while True:
     currMs = time.ticks_ms()
     if time.ticks_diff(time.ticks_ms(), lastMs) >=1000:
         lastMs = time.ticks_ms()
-        if alarm:
+        if countTime:
             print("{} seconds to alarm".format(int(millisToAlarm/1000)))
             millisToAlarm = millisToAlarm -1000
-    time.sleep_ms(300)
+    time.sleep_ms(10)

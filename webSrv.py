@@ -14,6 +14,8 @@ newSong = False
 newLightPattern = False
 
 def getLight():
+    '''if new lightPattern was set it returns the name as string
+    '''
     global newLightPattern
     global lightPattern
 
@@ -24,6 +26,8 @@ def getLight():
         return "None"
 
 def getSong():
+    '''if a new song was set it returns the name as string
+    '''
     global newSong
     global song
     if newSong:
@@ -35,6 +39,8 @@ def getSong():
 
 
 def getTime():
+    '''if a new time was set it returns the time as touple
+    '''
     global newTime
     global date
 
@@ -59,11 +65,12 @@ def getAlarm():
 def _httpHandlerPost(httpClient, httpResponse) :
     global lightPattern
     global newLightPattern
-    newLightPattern = True
 
     formData = httpClient.ReadRequestPostedFormData()
     print(formData)
-    lightPattern = formData["light"]
+    if "light" in formData:
+        newLightPattern = True
+        lightPattern = formData["light"]
 
     httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
 
