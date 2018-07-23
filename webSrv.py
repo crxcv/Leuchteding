@@ -51,6 +51,7 @@ def getTime():
         return "None"
 
 def getAlarm():
+    '''if new alarmTime was set it returns the time as alarm_touple'''
     global newAlarm
     global alarmTime
 
@@ -67,7 +68,7 @@ def _httpHandlerPost(httpClient, httpResponse) :
     global newLightPattern
 
     formData = httpClient.ReadRequestPostedFormData()
-    print(formData)
+    #print(formData)
     if "light" in formData:
         newLightPattern = True
         lightPattern = formData["light"]

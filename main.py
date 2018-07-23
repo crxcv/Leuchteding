@@ -5,39 +5,49 @@ import _thread, gc, utime
 import connectSTA_AP, songs
 import webSrv as srv
 
-#blink once at startup to signalize that device has started and turn off all led
-px.blink(count=1)
-
-#connect to wifi or create access point
-connectSTA_AP.connect()
-time.sleep_ms(200)
-#create realTimeClock instance and synchronize with online clock if possible
-clock= RTC()
-date = clock.now()
-
-timer = Timer(0)
 newAlarm = False
 newTime = False
 newSong = False
 alarm = False
+lightOn = False
 alarmTime = (0,0)
 currMs = 0
 lastMs = 0
-lastMsLoop = 0
+lastMsAlarm = 0
 timeCounterSecnds = 0
 millisToAlarm = 0
 #gets true if new AlarmTime was set, to print seconds to alarm in terminal
 countTime = False
 
 oldLightCase = 0
+alarmLightCase = 3
 lightCase = 0
 light = "None"
 lightAnim_thread = 0
 #lightMax = 5
 song = "None"
+alarmSong = "Tetris"
 music_thread = 0
+#connect to wifi or create access point
+connectSTA_AP.connect()
+time.sleep_ms(200)
+#create realTimeClock instance and synchronize with online clock if possible
+clock= RTC()
+date = clock.now()
+timer = Timer(0)
 
-#_thread.replAcceptMsg(True)
+#touch sensor configuration
+touchLight = TouchPad(Pin(2))
+touchThreshold = touchLight.read()#sum(thresholdLight)//len(thresholdLight)
+#touchLight.config(600)
+
+#light resistor configuration
+ldr = ADC(Pin(36, Pin.IN)) #SVP-Pin
+ldrVal = ldr.read()
+px.setBrightness(ldrVal)
+#blink once at startup to signalize that device has started and turn off all led
+px.blink(count=1)
+
 
 #interruptHandler for touchLight pin
 def touchLightCallback(touchLight):
@@ -45,15 +55,8 @@ def touchLightCallback(touchLight):
     global touchThreshold
     lightCase = lightCase +1
 
-#touch sensor configuration
-touchLight = TouchPad(Pin(4))
-
-touchThreshold = touchLight.read()#sum(thresholdLight)//len(thresholdLight)
-#touchLight.config(600)
 
 
-#light resistor configuration
-#ldr = ADC(Pin(36, Pin.IN))
 
 def handleLightThread(val):
     '''stops current running light animation and starts new one with given value
@@ -68,10 +71,10 @@ def handleLightThread(val):
         status = _thread.status(lightAnim_thread)
         if status is not _thread.TERMINATED:
             _thread.stop(lightAnim_thread)
-            time.sleep_ms(200)
+            time.sleep_ms(500)
         lightAnim_thread = 0
     lightAnim_thread = _thread.start_new_thread("lightAnim", px.thread, (val,))
-    time.sleep_ms(500)
+    time.sleep_ms(1000)
     #px.thread(val)
 
 def handleMusicThread(val):
@@ -91,12 +94,14 @@ def _handleTimer(timer):
     '''
     global countTime
     global alarm
+    global lastMsAlarm
     print("ALARM!")
     alarm = True
     countTime = False
-    handleLightThread(4)
+    lastMsAlarm = time.ticks_ms()
+    handleLightThread(alarmLightCase)
     time.sleep_ms(50)
-    handleMusicThread("Tetris")
+    handleMusicThread(alarmSong)
 
 def setAlarmTime(h, m):
     '''
@@ -176,8 +181,19 @@ while True:
         #if no alarm is currently running, increase lightCase by one to toggle through lightAnimations
         else:
             lightCase += 1
-        #time.sleep_ms(200)
+            time.sleep_ms(100)
 
+    if alarm:
+        currMs = time.ticks_ms
+        if time.ticks_diff(time.ticks_ms(), lastMsAlarm) >500:
+            if lightOn:
+                px.off()
+                lightOn = False
+            else:
+                px.setAll(245, 242, 22,255)
+                lightOn = True
+
+            lastMsAlarm = time.ticks_ms()
     #check if lightAnim was set on website. returns "None" if none was set
     light = srv.getLight()
     if light is not "None":
@@ -215,6 +231,7 @@ while True:
     song = srv.getSong()
     if song is not "None":
         print("song set to: {}".format(song))
+        playSong = song
         time.sleep_ms(300)
         handleMusicThread(song)
 
@@ -240,4 +257,4 @@ while True:
         if countTime:
             print("{} seconds to alarm".format(int(millisToAlarm/1000)))
             millisToAlarm = millisToAlarm -1000
-    time.sleep_ms(10)
+    time.sleep_ms(150)
