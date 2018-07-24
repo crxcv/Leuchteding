@@ -2,6 +2,8 @@ from microWebSrv import MicroWebSrv
 import _thread
 import time, utime
 from machine import RTC
+import json
+
 srv_run_in_thread = True
 song = "None"
 lightPattern = "None"
@@ -10,6 +12,10 @@ alarmTime = (date[3], date[4])
 newTime = False
 newAlarm = False
 newSong = False
+newColors = False
+red, green, blue = 0,0,0
+rgb = "None"
+colors = None
 
 newLightPattern = False
 
@@ -33,6 +39,7 @@ def getSong():
     if newSong:
         #print(song)
         newSong = False
+        print("newSong srv: {}".format(song))
         return song
     else:
         return "None"
@@ -61,6 +68,18 @@ def getAlarm():
     else:
         return "None"
 
+def getColors():
+    global rgb
+    global newColors
+    #print(colors)
+
+    if newColors:
+        newColors = False
+        return rgb
+
+    else:
+        return "None"
+
 #route handler for http-post requests
 @MicroWebSrv.route('/', 'POST')
 def _httpHandlerPost(httpClient, httpResponse) :
@@ -75,6 +94,23 @@ def _httpHandlerPost(httpClient, httpResponse) :
 
     httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
 
+@MicroWebSrv.route('/led')
+@MicroWebSrv.route('/led', 'POST')
+def _httpHandlerLEDPost(httpClient, httpResponse):
+    global rgb#blue, green, red
+    global newColors
+    colors=httpClient.ReadRequestContentAsJSON()#ReadRequestPostedFormData()# #Read JSON color data
+    print(colors)
+    if colors:
+        newColors = True
+        #red, green, blue= [k for v, k in cols.items() )]
+        red = colors.get('red')
+        green = colors.get('green')
+        blue= colors.get('blue')
+        rgb = tuple((red, green, blue))
+        print("rgb {}".format(rgb))
+
+    httpResponse.WriteResponseFile(filepath = 'www/led.html', contentType= "text/html", headers = None)
 
 
 @MicroWebSrv.route('/alarm')

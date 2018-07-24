@@ -44,7 +44,7 @@ touchThreshold = touchLight.read()#sum(thresholdLight)//len(thresholdLight)
 #light resistor configuration
 ldr = ADC(Pin(36, Pin.IN)) #SVP-Pin
 ldrVal = ldr.read()
-px.setBrightness(ldrVal)
+px.setBrightness(255)
 #blink once at startup to signalize that device has started and turn off all led
 px.blink(count=1)
 
@@ -114,11 +114,11 @@ def setAlarmTime(h, m):
     global countTime
 
     countTime = True
-
     secondsPerDay = 86400
     secondsPerHour = 3600
     secondsPerMin = 60
     msPerSec = 1000
+
     #get actual time as touple
     currTime_touple = utime.localtime()
     #convert tuple to sec
@@ -132,7 +132,6 @@ def setAlarmTime(h, m):
     print("alarm_sec:{}".format(alarm_sec))
 
     #check if alarmTime is on this day or not
-
     #substract alarm_sec from currTime_sec. if result equals or is more than 0, alarm must be now or in the past so we need to add secondsPerDay
     alarm_sec = currTime_sec - alarm_sec
     #print("currTime_sec - alarm_sec: {} ".format(alarm_sec))
@@ -151,10 +150,6 @@ def setAlarmTime(h, m):
 
     return alarm_ms
 
-#def wait(timeToWait):
-#    currMs = time.ticks_ms()
-#    if currMs
-
 #start server in thread
 srv.start()
 
@@ -162,8 +157,7 @@ while True:
     #resetWDT()
     lastMsLoop = time.ticks_ms()
     touchval = touchLight.read()
-    #print("...done")
-    #time.sleep_ms(200)
+
     #read the touch sensor and check if it was touched
     touchLightRatio = touchval / touchThreshold
     if .40 < touchLightRatio < .8:
@@ -220,21 +214,13 @@ while True:
         handleLightThread(lightCase)
         time.sleep_ms(1000)
 
-    #synch systemTime online if not done yet.
-#    if not clock.synced():
-#        clock.ntp_sync(server="hr.pool.ntp.org", tz="CET-1CEST")
-#        print("current time: {}".format(clock.now()))
-#        time.sleep_ms(400)
-
-
     #check if a new song was set on website, gets "None" if not
     song = srv.getSong()
     if song is not "None":
         print("song set to: {}".format(song))
-        playSong = song
-        time.sleep_ms(300)
+        alarmSong = song
+        time.sleep_ms(1000)
         handleMusicThread(song)
-
 
     #check if systemTime was changed on website
     newTime = srv.getTime()
@@ -249,6 +235,12 @@ while True:
         millisToAlarm = setAlarmTime(int(newAlarm[0]), int(newAlarm[1]))
         newAlarm = False
     #time.sleep_ms(400)
+
+    newColor = srv.getColors()
+    if newColor is not "None":
+        print("new color from srv: {}".format(newColor))
+        px.setAll(newColor[0], newColor[1], newColor[2], 255)
+        time.sleep_ms(300)
 
     #get current systemTime in milliseconds
     currMs = time.ticks_ms()

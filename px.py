@@ -50,16 +50,20 @@ def hex_to_RGB(hexInput):
 #     '''[255,255,255] -> (255,255,255)'''
 #     return (RGB[0], RGB[1],RGB[2])
 
-
-def RGB_to_hex(RGB):
+def RGB_to_hex(RGBin):
     ''' [255,255,255] -> "0xFFFFFF" '''
     # Components need to be integers for hex to make sense
-    RGB = [int(x) for x in RGB]
-    return "0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB])
+    #RGB = [int(x) for x in RGB]
+    RGB = [int(x) for x in RGBin]
+    print(RGB)
+    return int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB]))
 # ---------- end conv. values ------------------
 
 def setAll(red, green, blue, brightness, wait = 0.0):
-    strip.set(0, int(RGB_to_hex([red, green, blue])), num=led, update=False )
+    RGB =[str(red), str(green), str(blue)] #[int(red, 16), int(green, 16), int(blue, 16)]
+    #RGB = [int(x) for x in val]
+    colInt = RGB_to_hex([green, red, blue])#int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB]))
+    strip.set(0, colInt, num=led, update=False )
     strip.show()
     sleep(wait)
 #'''
@@ -73,15 +77,10 @@ def blink(count = 2):
         sleep(0.3)
         strip.set(0, 0x00, num=led)
         sleep(0.2)
-        #gc.collect()
-        #setAll(255, 230, 17, wait=0.5)
-        #setAll(0, 0, 0, wait=0.3)
 
-
-
-# For  Input a value 0 to 255 to get a color value.
-# The colours are a transition r - g - b - back to r.
 def Wheel(wheelPos):
+    """# For  Input a value 0 to 255 to get a color value.
+    # The colours are a transition r - g - b - back to r"""
     #print("wheel")
     wheelPos = 255 -  wheelPos
     if( wheelPos < 85) :
@@ -471,10 +470,3 @@ def thread(val):
     #_thread.resume(threadID)
 
     print("thread takes {} bytes".format(before-after))
-
-'''
-checks if there is a thread running, if it is so it stops the thread and starts a new one
-value: number of the animation which should start
-'''
-#def startAnimThread(value):
-    #print("startAnimThread")
