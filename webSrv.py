@@ -1,18 +1,27 @@
 from microWebSrv import MicroWebSrv
 import _thread
-import time
+import time, utime
+from machine import RTC
+import json
+
 srv_run_in_thread = True
 song = "None"
 lightPattern = "None"
-date= (0, 0, 0, 0, 0)
-alarmTime = (0, 0)
+date= utime.localtime()#(0, 0, 0, 0, 0)
+alarmTime = (date[3], date[4])
 newTime = False
 newAlarm = False
 newSong = False
+newColors = False
+red, green, blue = 0,0,0
+rgb = "None"
+colors = None
 
 newLightPattern = False
 
-def light():
+def getLight():
+    '''if new lightPattern was set it returns the name as string
+    '''
     global newLightPattern
     global lightPattern
 
@@ -22,18 +31,23 @@ def light():
     else:
         return "None"
 
-def song():
+def getSong():
+    '''if a new song was set it returns the name as string
+    '''
     global newSong
     global song
     if newSong:
         #print(song)
         newSong = False
+        print("newSong srv: {}".format(song))
         return song
     else:
         return "None"
 
 
-def time():
+def getTime():
+    '''if a new time was set it returns the time as touple
+    '''
     global newTime
     global date
 
@@ -43,7 +57,8 @@ def time():
     else:
         return "None"
 
-def alarm():
+def getAlarm():
+    '''if new alarmTime was set it returns the time as alarm_touple'''
     global newAlarm
     global alarmTime
 
@@ -53,19 +68,49 @@ def alarm():
     else:
         return "None"
 
+def getColors():
+    global rgb
+    global newColors
+    #print(colors)
+
+    if newColors:
+        newColors = False
+        return rgb
+
+    else:
+        return "None"
+
 #route handler for http-post requests
 @MicroWebSrv.route('/', 'POST')
 def _httpHandlerPost(httpClient, httpResponse) :
     global lightPattern
     global newLightPattern
-    newLightPattern = True
 
     formData = httpClient.ReadRequestPostedFormData()
-    print(formData)
-    lightPattern = formData["light"]
+    #print(formData)
+    if "light" in formData:
+        newLightPattern = True
+        lightPattern = formData["light"]
 
     httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
 
+@MicroWebSrv.route('/led')
+@MicroWebSrv.route('/led', 'POST')
+def _httpHandlerLEDPost(httpClient, httpResponse):
+    global rgb#blue, green, red
+    global newColors
+    colors=httpClient.ReadRequestContentAsJSON()#ReadRequestPostedFormData()# #Read JSON color data
+    print(colors)
+    if colors:
+        newColors = True
+        #red, green, blue= [k for v, k in cols.items() )]
+        red = colors.get('red')
+        green = colors.get('green')
+        blue= colors.get('blue')
+        rgb = tuple((red, green, blue))
+        print("rgb {}".format(rgb))
+
+    httpResponse.WriteResponseFile(filepath = 'www/led.html', contentType= "text/html", headers = None)
 
 
 @MicroWebSrv.route('/alarm')
@@ -81,6 +126,8 @@ def _httpHandlerAlarm(httpClient, httpResponse):
     global newTime
     formData = httpClient.ReadRequestPostedFormData()
     print(formData)
+    date = utime.localtime()
+
     if "time" in formData:
         #string formatting:
         # >>> '%0.2d' %(3)
@@ -144,7 +191,7 @@ def _httpHandlerAlarm(httpClient, httpResponse):
               <label form="setAlarm">Weckzeit einstellen</label>
               </br>
               <label for"alarmTime">Uhrzeit</label>
-              <input type="text" name="alarmTime" id="alarmTime" value="{3:02.02d}:{4:02.02d}" >
+              <input type="text" name="alarmTime" id="alarmTime" value="{5:02.02d}:{6:02.02d}" >
               </br>
               <label >
                 <input type="checkbox" name="dailyAlarm" value="dailyAlarm" checked="checked">
@@ -179,7 +226,7 @@ def _httpHandlerAlarm(httpClient, httpResponse):
             <button type="submit" name="playSongButton" value="playSong">Wecksound w&auml;hlen</button>
           </form>
         </body>
-        </html>""".format(date[2], date[1], date[0], date[3], date[4])#.format(0, 1, 2, 3,4, 5)#
+        </html>""".format(date[2], date[1], date[0], date[3], date[4], alarmTime[0], alarmTime[1])#.format(0, 1, 2, 3,4, 5)#
     httpResponse.WriteResponseOk(   headers         = ({'Cache-Control': 'no-cache'}),
                                     contentType     = 'text/html',
                                     contentCharset  = 'UTF-8',

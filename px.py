@@ -3,10 +3,10 @@ import  machine, math, random, gc
 import _thread
 from time import sleep, sleep_ms
 pin = 14
-led = 60#12
-strip = machine.Neopixel(pin=machine.Pin(pin), pixels=led, type=0)
+led = 16#12
+strip = machine.Neopixel(pin=machine.Pin(pin), pixels=led, type=1)
 brightness = 255
-strip.color_order("RGB")
+strip.color_order("RGBW")
 
 strip.brightness(255, update=True)
 fact_cache = {}
@@ -19,31 +19,51 @@ _thread.allowsuspend(True)
 w, h = 3, led
 #oldColor = [[ 0x00 for x in range (w)] for y in range(h)]
 
+def checkNotification():
+    """#check for thread notifications
+    if exit notfication exists, turn off all led and return True
+    else return False"""
+    ntf = _thread.getnotification()
+    if ntf == _thread.EXIT:
+        print("exiting lightThread")
+        strip.clear()
+        return True
+    return False
+
 #set brightness
 def setBrightness(ldrVal):
     global brightness
     brightness = ldrVal*1024 / 255
     strip.brightness(int(brightness), update=True)
 # ------------converting values
-def hex_to_RGB(hex):
+def hex_to_RGB(hexInput):
     ''' "#FFFFFF" -> [255,255,255] '''
+    if hexInput is 0:
+        return (0, 0, 0)
+    hexVal = hex(hexInput)
+    #print("hexVal: {}".format(hexVal))
     # Pass 16 to the integer function for change of base
-    return [int(hex[i:i+2], 16) for i in range(1,6,2)]
+    return [int(hexVal[i:i+2],16) for i in range(2,7,2)]
+    #return tuple(map(ord,hex[1:].decode('hex')))
 
 # def RGB_to_touple(RGB):
 #     '''[255,255,255] -> (255,255,255)'''
 #     return (RGB[0], RGB[1],RGB[2])
 
-
-def RGB_to_hex(RGB):
+def RGB_to_hex(RGBin):
     ''' [255,255,255] -> "0xFFFFFF" '''
     # Components need to be integers for hex to make sense
-    RGB = [int(x) for x in RGB]
-    return "0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB])
+    #RGB = [int(x) for x in RGB]
+    RGB = [int(x) for x in RGBin]
+    print(RGB)
+    return int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB]))
 # ---------- end conv. values ------------------
 
 def setAll(red, green, blue, brightness, wait = 0.0):
-    strip.set(0, int(RGB_to_hex([red, green, blue, brightness])), num=led, update=False )
+    RGB =[str(red), str(green), str(blue)] #[int(red, 16), int(green, 16), int(blue, 16)]
+    #RGB = [int(x) for x in val]
+    colInt = RGB_to_hex([green, red, blue])#int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB]))
+    strip.set(0, colInt, num=led, update=False )
     strip.show()
     sleep(wait)
 #'''
@@ -57,15 +77,10 @@ def blink(count = 2):
         sleep(0.3)
         strip.set(0, 0x00, num=led)
         sleep(0.2)
-        #gc.collect()
-        #setAll(255, 230, 17, wait=0.5)
-        #setAll(0, 0, 0, wait=0.3)
 
-
-
-# For  Input a value 0 to 255 to get a color value.
-# The colours are a transition r - g - b - back to r.
 def Wheel(wheelPos):
+    """# For  Input a value 0 to 255 to get a color value.
+    # The colours are a transition r - g - b - back to r"""
     #print("wheel")
     wheelPos = 255 -  wheelPos
     if( wheelPos < 85) :
@@ -98,9 +113,7 @@ def rainbowCycle(wait=0.00):
         machine.resetWDT()
 
         #check if thread got notificatio to exit and exit if it is so
-        ntf = _thread.getnotification()
-        if ntf == _thread.EXIT:
-            print("exiting rainbow")
+        if checkNotification():
             return
 
         #set all pixel in rainbow colors
@@ -167,11 +180,6 @@ def bezier_gradient(colors=None, n_out=None):
 
         return int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in out]))
 
-    ntf = _thread.getnotification()
-    if ntf == _thread.EXIT:
-        print("exiting bezier thread")
-        #gc.collect()
-        return
 
     if colors is None:
         colors=threecolors
@@ -210,14 +218,13 @@ def fire(cooling = 70, sparkling = 140, speedDelay = 0.0):
     print("fire")
     heat = [0x00 for x in range(led, 0, -1)]
     cooldown = 0
-    #while True:
-    for i in range(20):
-        # Step 1: cool down every cell a little
-        ntf = _thread.getnotification()
-        if ntf == _thread.EXIT:
-            #gc.collect()
+    while True:
+    #for i in range(20):
+        #check if thread got notificatio to exit and exit if it is so
+        if checkNotification():
             return
 
+        # Step 1: cool down every cell a little
         for i in range(led):
             cooldown = random.randint(0, int((cooling * 10) / led) +2)
 
@@ -246,9 +253,7 @@ def fire(cooling = 70, sparkling = 140, speedDelay = 0.0):
         strip.show()
         gc.collect()
 
-
 def setPixelHeatColor(pixel, temp):
-
     global brightness
     # scale heat down from 0-255 to 0-191
     ht = round((temp/255.0) * 191)
@@ -265,54 +270,161 @@ def setPixelHeatColor(pixel, temp):
         val = [heatramp,255,  0]
     else:                       #coolest
         val = [0, heatramp, 0]
-    RGBW = [int(x) for x in val]
-    colInt = int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGBW]))
+    RGB = [int(x) for x in val]
+    colInt = int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB]))
     strip.set(pixel, colInt, update=False)
 # --------------fire - end -----------------------
 
 
 # --------------- meteorRain -------------------------
-
-
 def fadeToBlack(ledNo, fadeValue):
     global brightness
     oldVal = strip.get(ledNo)
     #print("strip.get: {}".format(oldVal))
-    oldCol = hex_to_RGB(oldVal)
+    oldCol = hex_to_RGB(oldVal[0])
     r = (oldCol[0] | 0x00ff0000) >> 16
     g = (oldCol[1] & 0x0000ff00) >> 8
     b = (oldCol[2] & 0x000000ff)
-    w = brightness
+    w = oldVal[1]
 
     r= 0 if (r<=10) else int(r-(r*fadeValue/256))
     g= 0 if (g<=10) else int(g-(g*fadeValue/256))
     b= 0 if (b<=10) else int(b-(b*fadeValue/256))
-    strip.set(ledNo, RGB_to_hex(r,g,b, w), update=False)
+    strip.set(ledNo, int(RGB_to_hex([r,g,b])), update=False)
 
 #0xff,0xff,0xff,7, 255, True, 0.00030
-def meteorRain(red=0xff, green=0xff, blue=0xff, meteorSize = 7, meteorTrailDecay = 255, meteorRandomDecay = True, speedDelay = 0.00030):
+def meteorRain(red=0xff, green=0xff, blue=0xff, meteorSize = 7, meteorTrailDecay = 255, meteorRandomDecay = True, speedDelay = 0.003):
     global brightness
     print("meteorRain")
-    setAll(0x00, 0x00, 0x00)
+    setAll(0x00, 0x00, 0x00, 0xFF)
 
-    for i in range (led):
-        ntf = _thread.getnotification()
-        if ntf == _thread.EXIT:
-            ##gc.collect()
+    while True:
+        for i in range (led):
+            #check if thread got notificatio to exit and exit if it is so
+            if checkNotification():
+                return
+
+            for j in range (led):
+                if (not meteorRandomDecay) or random.randint(0,10) > 5 :
+                    fadeToBlack(j, meteorTrailDecay)
+            strip.show()
+
+            for j in range (meteorSize):
+                if i-j < led and i-j >= 0:
+                    strip.set(i-j, int(RGB_to_hex((red, green, blue))), update=False)
+            strip.show()
+            gc.collect()
+            sleep(speedDelay)
+# ------------------ meteor end ----------------------------------
+
+#sparkle
+def sparkle():
+    print("sparkle")
+    speed = 1000
+
+    while True:
+        if checkNotification():
             return
 
-        for j in range (led):
-            if (not meteorRandomDecay) or random.randint(0,10) > 5 :
-                fadeToBlack(j, meteorTrailDecay)
-        strip.show()
+        for i in range(1, led+1):
+            val = Wheel(random.randint(0,255))
+            RGB = [int(x) for x in val]
+            color = int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB]))
 
-        for j in range (meteorSize):
-            if i-j < led and i-j >= 0:
-                strip.set(i-j, RGB_to_hex(red, green, blue, brightness), update=False)
+            if random.randint(0,10)<4:
+                strip.set(i, color, update=False)
+            else:
+                strip.set(i, 0x00, update = False)
+        strip.show()
+        sleep_ms(10)
+        strip.clear
+        gc.collect()
+#---------------------end of sparkle-------------------------
+
+def wave():
+    print("wave")
+    MAX_INT_VALUE = 65536
+    frame = 0
+    hue    = 180
+
+    while True:
+        #strip.clear()
+        if checkNotification():
+            return
+
+        for i in range(led):
+            deg = float(frame + ((MAX_INT_VALUE / led ) * i ))/ (float(MAX_INT_VALUE))*360
+            val = math.pow(math.sin(math.radians(deg)), 8)
+
+            if (val>=0):
+                col=strip.get(i)
+                #print(col)
+                #colInt = int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in col]))
+                old = strip.RGBtoHSB(col[0] )
+                h = old[0] + hue
+                s = old[1] + 255
+                b=old[2] + val*256
+                strip.setHSB(i, h, 255, b, num=1, update=False)
+            else:
+                strip.set(i, 0x00, num=1, update=False)
+        strip.show()
+        frame += 1000
+        gc.collect()
+        sleep_ms(1000)
+#-----------------end of wave-------------------------
+
+def ripple():
+    print("ripple")
+    currBg = random.randint(0, 256)
+    nextBg = currBg
+    step = -1
+    maxSteps = 16
+    center = 0
+    fadeRate = 0.8
+
+    def wrap( step):
+        if(step < 0):
+            return led + step
+        if(step > led - 1):
+            return step - led
+        return step
+
+    while True:
+        if checkNotification():
+            return
+
+        if currBg is nextBg:
+            nextBg = random.randint(0, 256)
+        elif nextBg > currBg:
+            currBg+= 1
+        else:
+            currBg-=1
+
+        for i in range(led):
+            strip.setHSB(i, currBg, 255, 50, update=False)
+
+        if step is -1:
+            center = random.randint(0, led)
+            color = random.randint(0, 256)
+            steop = 0
+
+        if step is 0:
+            strip.setHSB(center,color, 255, 255, update=False)
+            step+=1
+
+        else:
+            if step < maxSteps:
+                strip.setHSB(wrap(center + step), color, 255, pow(fadeRate, step)*255, update=False)
+                if step > 3:
+                    strip.setHSB(wrap(center + step - 3),color, 255, pow(fadeRate, step - 2)*255, update=False)
+                    strip.setHSB(wrap(center - step + 3),color, 255, pow(fadeRate, step - 2)*255, update=False)
+                step +=1
+            else:
+                step = -1
         strip.show()
         gc.collect()
-        sleep(speedDelay)
-# ------------------ meteor end ----------------------------------
+        sleep_ms(100)
+#------------------end of ripple--------------------------
 
 #turn off all pixels
 def off():
@@ -323,13 +435,21 @@ def off():
 
 #def thread(val, threadID):
 def thread(val):
-    val = val % 6
+    val = val % 11
     print("started thread {}".format(val))
     #_thread.lock()
     gc.collect()
     before = gc.mem_free()
     #_thread.suspend(threadID)
     #while True:
+    if val is 10:
+        wave()
+    if val is 8:
+        ripple()
+    if val is 7:
+        sparkle()
+    if val is 6:
+        meteorRain()
     if val is 5:
         rainbowCycle()
     elif val is 4:
@@ -340,6 +460,8 @@ def thread(val):
         fire()
     elif val is 1:
         rainbow()
+    elif val is 0:
+        off()
     else:
         setAll(23, 230, 180, 255)
     after = gc.mem_free()
@@ -348,10 +470,3 @@ def thread(val):
     #_thread.resume(threadID)
 
     print("thread takes {} bytes".format(before-after))
-
-'''
-checks if there is a thread running, if it is so it stops the thread and starts a new one
-value: number of the animation which should start
-'''
-#def startAnimThread(value):
-    #print("startAnimThread")

@@ -29,6 +29,13 @@ def connect():
         ap_if.config(essid = ssid)
         ap_if.config(password = pw)
 
+    try:
+        mdns = networkself.mDNS()
+        mdns.start("RainbowWarrior", "MicroPython with mDNS")
+        mdns.addService('_http', '_tcp', 80, "MicroPython", {"board": "ESP32", "service": "mPy Web server"})
+    except:
+        print("mDNS not started")
+
 def station_activated():
     print("stationMode activated: {}".format(sta_if))
     return sta_if
