@@ -32,12 +32,20 @@ def checkNotification():
 
 #set brightness
 def setBrightness(ldrVal):
+    """setBrightnes(ldrVal)
+    maps the ldrVal (between 0 and 1024) to the brightness value (between 0 and 255)
+    ldrVal: value read by ldr sensor
+    """
     global brightness
-    brightness = ldrVal*1024 / 255
+    brightness = ldrVal/1050 * 255
     strip.brightness(int(brightness), update=True)
 # ------------converting values
 def hex_to_RGB(hexInput):
-    ''' "#FFFFFF" -> [255,255,255] '''
+    '''
+    hex_to_RGB(hexInput)
+    converts the hexadecimal value to list of rgb values
+    hexInput: hexadecimal value ()"FFFFFF" ("FFFFFF" / "0xFFFFFF")
+    return value: list containing integer value for red, green and blue -> [255,255,255] '''
     hexVal = 0
     if hexInput == 0:
         return (0, 0, 0)
@@ -52,15 +60,21 @@ def hex_to_RGB(hexInput):
 #     return (RGB[0], RGB[1],RGB[2])
 
 def RGB_to_hex(RGBin):
-    ''' [255,255,255] -> "0xFFFFFF" '''
+    '''RGB_to_hex(RGBin)
+    converts list of containing values for red, green and blue to integers and then
+    to one hexadecimal value and returns it as integer
+    RGBin: List containing RGB Values
+    return value: hexadecimal value as integer
+     [255,255,255] -> "0xFFFFFF" '''
     # Components need to be integers for hex to make sense
-    #RGB = [int(x) for x in RGB]
-    RGB = [int(x) for x in RGBin]
-    print(RGB)
-    return int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB]))
+    #RGB = [int(x) for x in RGBin]
+    print(RGBin)
+    return int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGBin]))
 # ---------- end conv. values ------------------
 
 def setAll(red, green, blue, brightness, wait = 0.0):
+    """setAll(red, green, blue, brightness, wait=0.0)
+    sets all pixels in color defined by red, green, blue"""
     RGB =[str(red), str(green), str(blue)] #[int(red, 16), int(green, 16), int(blue, 16)]
     #RGB = [int(x) for x in val]
     colInt = RGB_to_hex([green, red, blue])#int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB]))
@@ -123,8 +137,9 @@ def rainbowCycle(wait=0.00):
             RGB = [int(x) for x in val]
             colInt = int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB]))
             strip.set(i, colInt, update=False)
-            gc.collect()
+
         strip.show()
+        gc.collect()
         sleep(wait)
 
     print("all cycles done")
