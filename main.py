@@ -24,10 +24,12 @@ alarmLightCase = 3
 lightCase = 0
 light = "None"
 lightAnim_thread = 0
-#lightMax = 5
+brightnessVal = 0
+oldBrightnessVal = 0
 song = "None"
 alarmSong = "Tetris"
 music_thread = 0
+ledColor = (245, 242, 22)
 #connect to wifi or create access point
 connectSTA_AP.connect()
 time.sleep_ms(200)
@@ -37,7 +39,7 @@ date = clock.now()
 timer = Timer(0)
 
 #touch sensor configuration
-touchLight = TouchPad(Pin(2))
+touchLight = TouchPad(Pin(27))
 touchThreshold = touchLight.read()#sum(thresholdLight)//len(thresholdLight)
 #touchLight.config(600)
 
@@ -156,8 +158,10 @@ srv.start()
 while True:
     #resetWDT()
     lastMsLoop = time.ticks_ms()
-    touchval = touchLight.read()
-
+    try:
+        touchval = touchLight.read()
+    except ValueError:
+        print("TouchPad read error")
     #read the touch sensor and check if it was touched
     touchLightRatio = touchval / touchThreshold
     if .40 < touchLightRatio < .8:
@@ -177,6 +181,7 @@ while True:
             lightCase += 1
             time.sleep_ms(100)
 
+    #if alarm is running let the LEDs blink twice per second
     if alarm:
         currMs = time.ticks_ms
         if time.ticks_diff(time.ticks_ms(), lastMsAlarm) >500:
@@ -184,10 +189,10 @@ while True:
                 px.off()
                 lightOn = False
             else:
-                px.setAll(245, 242, 22,255)
+                px.setAll(ledColor[0], ledColor[1], ledColor[2], 255)
                 lightOn = True
-
             lastMsAlarm = time.ticks_ms()
+
     #check if lightAnim was set on website. returns "None" if none was set
     light = srv.getLight()
     if light is not "None":
@@ -236,16 +241,40 @@ while True:
         newAlarm = False
     #time.sleep_ms(400)
 
-    newColor = srv.getColors()
-    if newColor is not "None":
-        print("new color from srv: {}".format(newColor))
-        px.setAll(newColor[0], newColor[1], newColor[2], 255)
+    #check if LED colors were set on website
+    col = srv.getColors()
+    if col is not "None":
+        ledColor = col
+        print("new color from srv: {}".format(ledColor))
+        px.setAll(ledColor[0], ledColor[1], ledColor[2], 255)
         time.sleep_ms(300)
+
+    #check surrounding brightness
+    #change brightnessValue of LED only if there are massive changes
+    ldrVal = ldr.read()
+    if ldrVal < 205:
+        brightnessVal = 0
+    elif ldrVal < 410:
+        brightnessVal = 1
+    elif ldrVal < 615:
+        brightnessVal = 2
+    elif ldrVal < 820:
+        brightnessVal = 3
+    else:
+        brightnessVal = 4
+
+    if brightnessVal != oldBrightnessVal:
+        px.setBrightness(ldrVal)
+        print(ldrVal)
+        oldBrightnessVal = brightnessVal
 
     #get current systemTime in milliseconds
     currMs = time.ticks_ms()
+    #execute containing code only once per second
     if time.ticks_diff(time.ticks_ms(), lastMs) >=1000:
         lastMs = time.ticks_ms()
+        #print(ldrVal)
+        #show countdown to alarm on terminal
         if countTime:
             print("{} seconds to alarm".format(int(millisToAlarm/1000)))
             millisToAlarm = millisToAlarm -1000
