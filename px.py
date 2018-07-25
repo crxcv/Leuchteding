@@ -10,7 +10,7 @@ strip.color_order("RGBW")
 
 strip.brightness(255, update=True)
 fact_cache = {}
-threecolors = {"#0652ce", "#3ff711", "#f72011"}
+threecolors = {0x0652ce, 0x3ff711, 0xf72011}
 
 lightAnim_thread = 0
 _thread.allowsuspend(True)
@@ -38,7 +38,8 @@ def setBrightness(ldrVal):
 # ------------converting values
 def hex_to_RGB(hexInput):
     ''' "#FFFFFF" -> [255,255,255] '''
-    if hexInput is 0:
+    hexVal = 0
+    if hexInput == 0:
         return (0, 0, 0)
     hexVal = hex(hexInput)
     #print("hexVal: {}".format(hexVal))
@@ -317,7 +318,7 @@ def meteorRain(red=0xff, green=0xff, blue=0xff, meteorSize = 7, meteorTrailDecay
             sleep(speedDelay)
 # ------------------ meteor end ----------------------------------
 
-#sparkle
+#-------------------sparkle----------------------------------
 def sparkle():
     print("sparkle")
     speed = 1000
@@ -341,6 +342,7 @@ def sparkle():
         gc.collect()
 #---------------------end of sparkle-------------------------
 
+#-------------------------wave-----------------------------------
 def wave():
     print("wave")
     MAX_INT_VALUE = 65536
@@ -373,6 +375,7 @@ def wave():
         sleep_ms(1000)
 #-----------------end of wave-------------------------
 
+#------------------ripple-----------------------------
 def ripple():
     print("ripple")
     currBg = random.randint(0, 256)
@@ -428,6 +431,8 @@ def ripple():
 
 #turn off all pixels
 def off():
+    """off()
+    turns off all pixels"""
     print("off")
     strip.set(0, 0x00, num=led)
 
