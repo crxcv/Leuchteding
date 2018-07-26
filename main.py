@@ -224,8 +224,10 @@ while True:
     if song is not "None":
         print("song set to: {}".format(song))
         alarmSong = song
-        time.sleep_ms(1000)
+        time.sleep_ms(3000)
         handleMusicThread(song)
+        time.sleep_ms(2000)
+
 
     #check if systemTime was changed on website
     newTime = srv.getTime()
@@ -249,24 +251,7 @@ while True:
         px.setAll(ledColor[0], ledColor[1], ledColor[2], 255)
         time.sleep_ms(300)
 
-    #check surrounding brightness
-    #change brightnessValue of LED only if there are massive changes
-    ldrVal = ldr.read()
-    if ldrVal < 205:
-        brightnessVal = 0
-    elif ldrVal < 410:
-        brightnessVal = 1
-    elif ldrVal < 615:
-        brightnessVal = 2
-    elif ldrVal < 820:
-        brightnessVal = 3
-    else:
-        brightnessVal = 4
 
-    if brightnessVal != oldBrightnessVal:
-        px.setBrightness(ldrVal)
-        print(ldrVal)
-        oldBrightnessVal = brightnessVal
 
     #get current systemTime in milliseconds
     currMs = time.ticks_ms()
@@ -278,4 +263,19 @@ while True:
         if countTime:
             print("{} seconds to alarm".format(int(millisToAlarm/1000)))
             millisToAlarm = millisToAlarm -1000
+
+        #check surrounding brightness
+        #change brightnessValue of LED only if there are massive changes
+        ldrVal = ldr.read()
+        if ldrVal < 350:
+            brightnessVal = 0
+        elif ldrVal < 700:
+            brightnessVal = 1
+        else:
+            brightnessVal = 2
+
+        if brightnessVal != oldBrightnessVal:
+            px.setBrightness(ldrVal)
+            print(ldrVal)
+            oldBrightnessVal = brightnessVal
     time.sleep_ms(150)

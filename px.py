@@ -10,7 +10,7 @@ strip.color_order("RGBW")
 
 strip.brightness(255, update=True)
 fact_cache = {}
-threecolors = {0x0652ce, 0x3ff711, 0xf72011}
+threecolors = {"0xff0000", "0x00ff00", "0x00ffff"}
 
 lightAnim_thread = 0
 _thread.allowsuspend(True)
@@ -44,12 +44,13 @@ def hex_to_RGB(hexInput):
     '''
     hex_to_RGB(hexInput)
     converts the hexadecimal value to list of rgb values
-    hexInput: hexadecimal value ()"FFFFFF" ("FFFFFF" / "0xFFFFFF")
+    hexInput: hexadecimal value  ("FFFFFF" / "0xFFFFFF")
     return value: list containing integer value for red, green and blue -> [255,255,255] '''
-    hexVal = 0
+    hexVal = hexInput
     if hexInput == 0:
         return (0, 0, 0)
-    hexVal = hex(hexInput)
+    if isinstance(hexVal, int):
+        hexVal = hex(hexInput)
     #print("hexVal: {}".format(hexVal))
     # Pass 16 to the integer function for change of base
     return [int(hexVal[i:i+2],16) for i in range(2,7,2)]
@@ -68,7 +69,7 @@ def RGB_to_hex(RGBin):
      [255,255,255] -> "0xFFFFFF" '''
     # Components need to be integers for hex to make sense
     #RGB = [int(x) for x in RGBin]
-    print(RGBin)
+    #tprint(RGBin)
     return int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGBin]))
 # ---------- end conv. values ------------------
 
@@ -173,12 +174,12 @@ def bernstein(t,n,i):
 
 
 def bezier_gradient(colors=None, n_out=None):
-
-    print("gradient")
     ''' Returns a "bezier gradient" dictionary
         using a given list of colors as control
         points. Dictionary also contains control
         colors/points. '''
+
+    print("gradient")
     def bezier_interp( t):
         ''' Define an interpolation function
             for this specific curve'''
@@ -211,14 +212,12 @@ def bezier_gradient(colors=None, n_out=None):
     ]
     for n in range(len(gradient)):
         strip.set(n,  gradient[n], update=False)
-        strip.set((led-n), gradient[n], update=False)
+        #strip.set((led-n), gradient[n], update=False)
     strip.show()
     gc.collect()
 
     #{"#00173d", "#f75002", "#01f2f7"}
     #for col in colors:
-
-
     #strip.show()
     # Return all points requested for gradient
     #return {

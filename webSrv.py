@@ -40,10 +40,10 @@ def getSong():
     global song
     if newSong:
         #print(song)
-        _thread.lock()
+        #_thread.lock()
         newSong = False
         print("newSong srv: {}".format(song))
-        _thread.unlock()
+        #_thread.unlock()
         return song
     else:
         return "None"
@@ -126,6 +126,8 @@ def _httpHandlerLEDPost(httpClient, httpResponse):
 @MicroWebSrv.route('/alarm')
 @MicroWebSrv.route('/alarm', 'POST')
 def _httpHandlerAlarm(httpClient, httpResponse):
+    _thread.lock()
+
     #global clock
     global date
     global song
@@ -136,7 +138,6 @@ def _httpHandlerAlarm(httpClient, httpResponse):
     global newTime
     formData = httpClient.ReadRequestPostedFormData()
     print(formData)
-    _thread.lock()
     date = utime.localtime()
 
     if "time" in formData:
@@ -170,7 +171,6 @@ def _httpHandlerAlarm(httpClient, httpResponse):
         newSong = True
         song = formData["setSound"]
         #print (formData)
-    _thread.unlock()
     #0: year    1: month 2: mday 3: hour 4: min 5: sec 6: weekday 7: yearday
     #data = RTC.now()
     #time = str("{0}.{1}.{3} {4}:{5} Uhr".format(data[2], data[1], data[0], data[3], data[4]))
@@ -283,6 +283,8 @@ def _httpHandlerAlarm(httpClient, httpResponse):
                                     contentType     = 'text/html',
                                     contentCharset  = 'UTF-8',
                                     content =html)
+    _thread.unlock()
+
 def start():
     '''
     create server instance and start server
