@@ -5,8 +5,8 @@ sta_if = False
 def connect():
     global ap_if
     global sta_if
-    STA_SSID = "crfb"
-    STA_PSK  = "CS10Ok09"
+    STA_SSID = "deineSSID"
+    STA_PSK  = "deinPasswort"
     ssid = "esp32"
     pw = "HuchEinPw"
     tries = 0

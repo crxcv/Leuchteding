@@ -39,7 +39,7 @@ date = clock.now()
 timer = Timer(0)
 
 #touch sensor configuration
-touchLight = TouchPad(Pin(27))
+touchLight = TouchPad(Pin(2))
 touchThreshold = touchLight.read()#sum(thresholdLight)//len(thresholdLight)
 #touchLight.config(600)
 

@@ -126,7 +126,6 @@ def rainbowCycle(wait=0.00):
 
     print("rainbowCycle")
     for j in range (256): #5 cycles of all colors on wheel
-        machine.resetWDT()
 
         #check if thread got notificatio to exit and exit if it is so
         if checkNotification():
