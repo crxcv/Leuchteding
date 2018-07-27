@@ -148,7 +148,7 @@ body {
 
 .sky {
   z-index: -1;
-  background: linear-gradient(#85a5cc 0, #d0e4f2 100%);
+  background: linear-gradient(#579cf2 20%, #9bcef2 100%);/*(#85a5cc 0, #d0e4f2 100%)*/
   box-shadow: 0 0 20px #d0e4f2;
   height: 44%;
   overflow: hidden;
