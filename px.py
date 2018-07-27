@@ -234,7 +234,7 @@ def fire(cooling = 70, sparkling = 140, speedDelay = 0.0):
     heat = [0x00 for x in range(led, 0, -1)]
     cooldown = 0
     while True:
-    #for i in range(20):
+    #for l in range(30):
         #check if thread got notificatio to exit and exit if it is so
         if checkNotification():
             return
@@ -313,6 +313,7 @@ def meteorRain(red=0xff, green=0xff, blue=0xff, meteorSize = 7, meteorTrailDecay
     print("meteorRain")
     setAll(0x00, 0x00, 0x00, 0xFF)
 
+    #for l in range(20):
     while True:
         for i in range (led):
             #check if thread got notificatio to exit and exit if it is so
@@ -337,6 +338,7 @@ def sparkle():
     print("sparkle")
     speed = 1000
 
+    #for l in range(20):
     while True:
         if checkNotification():
             return
@@ -363,6 +365,7 @@ def wave():
     frame = 0
     hue    = 180
 
+    #for l in range(20):
     while True:
         #strip.clear()
         if checkNotification():
@@ -406,6 +409,7 @@ def ripple():
             return step - led
         return step
 
+    #for r in range(20):
     while True:
         if checkNotification():
             return
@@ -461,7 +465,7 @@ def thread(val):
     before = gc.mem_free()
     #_thread.suspend(threadID)
     #while True:
-    if val is 10:
+    if val is 9:
         wave()
     if val is 8:
         ripple()

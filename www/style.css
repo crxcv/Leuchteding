@@ -2,7 +2,7 @@ body {
   /* Standard syntax (must be last) */
 }
 .rainbow-preloader .rainbow-stripe:nth-child(1) {
-  border-color: #f15a5a;
+  border-color: #f15a5ab4;
   clip: rect(0, 84px, 42px, 0);
   height: 60px;
   left: 48px;
@@ -20,7 +20,7 @@ body {
 }
 
 .rainbow-preloader .rainbow-stripe:nth-child(2) {
-  border-color: #f0c419;
+  border-color: #f0c419b4;
   clip: rect(0, 108px, 54px, 0);
   height: 84px;
   left: 36px;
@@ -38,7 +38,7 @@ body {
 }
 
 .rainbow-preloader .rainbow-stripe:nth-child(3) {
-  border-color: #4eba6f;
+  border-color: #4eba6fb4;
   clip: rect(0, 132px, 66px, 0);
   height: 108px;
   left: 24px;
@@ -56,7 +56,7 @@ body {
 }
 
 .rainbow-preloader .rainbow-stripe:nth-child(4) {
-  border-color: #2d95bf;
+  border-color: #2d95bfb4;
   clip: rect(0, 156px, 78px, 0);
   height: 132px;
   left: 12px;
@@ -74,7 +74,7 @@ body {
 }
 
 .rainbow-preloader .rainbow-stripe:nth-child(5) {
-  border-color: #955ba5;
+  border-color: #955ba5b4;
   clip: rect(0, 180px, 90px, 0);
   height: 156px;
   left: 0px;

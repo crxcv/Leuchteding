@@ -176,6 +176,11 @@ while True:
             timer.deinit()
             alarm = False
             time.sleep_ms(300)
+        #if lightThread or musicThread is running, abort the thread and turn off sound or light
+        elif _thread.status(lightAnim_thread) == _thread.RUNNING:
+            handleLightThread(0)
+        elif _thread.status(music_thread) == _thread.RUNNING:
+            handleMusicThread(0)
         #if no alarm is currently running, increase lightCase by one to toggle through lightAnimations
         else:
             lightCase += 1
@@ -197,18 +202,25 @@ while True:
     light = srv.getLight()
     if light is not "None":
         print("light changed by webserver: {}".format(light))
-        if "RainbowCycle" in light:
+        if "Wave" in light:
+            lightCase = 9
+        elif "Ripple" in light:
+            lightCase = 8
+        elif "Sparkle" in light:
+            lightCase = 7
+        elif "MeteorRain" in light:
+            lightCase = 6
+        elif "RainbowCycle" in light:
             lightCase = 5
         elif "ColorGradient" in light:
             lightCase = 4
-        elif "MeteorRain" in light:
-            lightCase = 3
         elif "Fire" in light:
             lightCase = 2
+        elif "Rainbow" in light:
+            lightCase = 1
         elif "Off" in light:
             lightCase = 0
-        else:
-            lightCase = 1
+
         #time.sleep for more than one second is important, else system will crash
         time.sleep_ms(2000)
 
