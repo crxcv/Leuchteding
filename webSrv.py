@@ -40,10 +40,10 @@ def getSong():
     global song
     if newSong:
         #print(song)
-        #_thread.lock()
+        _thread.lock()
         newSong = False
+        _thread.unlock()
         print("newSong srv: {}".format(song))
-        #_thread.unlock()
         return song
     else:
         return "None"
@@ -94,14 +94,16 @@ def _httpHandlerPost(httpClient, httpResponse) :
     global lightPattern
     global newLightPattern
 
+    _thread.lock()
     formData = httpClient.ReadRequestPostedFormData()
     #print(formData)
     if "light" in formData:
-        _thread.lock()
+        #_thread.lock()
         newLightPattern = True
         lightPattern = formData["light"]
-        _thread.unlock()
+        #_thread.unlock()
     httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
+    _thread.unlock()
 
 @MicroWebSrv.route('/led')
 @MicroWebSrv.route('/led', 'POST')
@@ -126,7 +128,6 @@ def _httpHandlerLEDPost(httpClient, httpResponse):
 @MicroWebSrv.route('/alarm')
 @MicroWebSrv.route('/alarm', 'POST')
 def _httpHandlerAlarm(httpClient, httpResponse):
-    _thread.lock()
 
     #global clock
     global date
@@ -136,6 +137,8 @@ def _httpHandlerAlarm(httpClient, httpResponse):
     global alarmTime
     global newDate
     global newTime
+    _thread.lock()
+
     formData = httpClient.ReadRequestPostedFormData()
     print(formData)
     date = utime.localtime()
