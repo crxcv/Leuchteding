@@ -26,7 +26,7 @@ def waitForNotification(timeout = 20):
     if ntf == _thread.EXIT:
         print("exiting lightThread")
         strip.clear()
-        #gc.collect()
+        gc.collect()
         return True
     return False
 
@@ -134,7 +134,7 @@ def rainbow(wait = 0):
         colInt = int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB]))
         strip.set(i, colInt, update=False)
     strip.show()
-    #gc.collect()
+    gc.collect()
     #sleep_ms(wait)
 
 # Slightly different, this makes the rainbow equally distributed throughout
@@ -151,7 +151,7 @@ def rainbowCycle(wait=200):
             strip.set(i, colInt, update=False)
 
         strip.show()
-        #gc.collect()
+        gc.collect()
         #check if thread got notificatio to exit and exit if it is so
         if waitForNotification(wait):
             return
@@ -228,7 +228,7 @@ def bezier_gradient(colors=None, n_out=None):
         strip.set(n,  gradient[n], update=False)
         #strip.set((led-n), gradient[n], update=False)
     strip.show()
-    ##gc.collect()
+    #gc.collect()
 
     #{"#00173d", "#f75002", "#01f2f7"}
     #for col in colors:
@@ -280,7 +280,7 @@ def fire(cooling = 70, sparkling = 140, speedDelay = 200):
         if waitForNotification(speedDelay):
             return
         #sleep_ms(speedDelay)
-        #gc.collect()
+        gc.collect()
 
 def setPixelHeatColor(pixel, temp):
     global brightness
@@ -339,7 +339,7 @@ def meteorRain(red=0xff, green=0xff, blue=0xff, meteorSize = 7, meteorTrailDecay
                 if i-j < led and i-j >= 0:
                     strip.set(i-j, int(RGB_to_hex((red, green, blue))), update=False)
             strip.show()
-            #gc.collect()
+            gc.collect()
             #sleep_ms(speedDelay)
             #check if thread got notificatio to exit and exit if it is so
             if waitForNotification(speedDelay):
@@ -367,7 +367,7 @@ def sparkle():
         if waitForNotification(200):
             return
         strip.clear
-        #gc.collect()
+        gc.collect()
 #---------------------end of sparkle-------------------------
 
 #-------------------------wave-----------------------------------
@@ -397,7 +397,7 @@ def wave():
                 strip.set(i, 0x00, num=1, update=False)
         strip.show()
         frame += 1000
-        #gc.collect()
+        gc.collect()
         if waitForNotification(1000):
             return
         #sleep_ms(1000)
@@ -451,7 +451,7 @@ def ripple():
             else:
                 step = -1
         strip.show()
-        #gc.collect()
+        gc.collect()
         #sleep_ms(100)
         if waitForNotification(100):
             return
@@ -470,7 +470,7 @@ def off():
 def thread(val):
     val = val % 11
     print("started thread {}".format(val))
-    #gc.collect()
+    gc.collect()
     before = gc.mem_free()
     if val is 9:
         wave()
@@ -495,5 +495,5 @@ def thread(val):
     else:
         setAll(23, 230, 180, 255)
     after = gc.mem_free()
-    #gc.collect()
+    gc.collect()
     print("thread takes {} bytes".format(before-after))
