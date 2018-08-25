@@ -138,10 +138,15 @@ def rainbow(wait = 0):
     #sleep_ms(wait)
 
 # Slightly different, this makes the rainbow equally distributed throughout
-def rainbowCycle(wait=200):
+def rainbowCycle(wait=500):
+    before = gc.mem_free()
     global brightness
+    val = 0
+    RGB = [0,0,0]
+    colInt = 0x000000
 
     print("rainbowCycle")
+
     for j in range (256): #5 cycles of all colors on wheel
         #set all pixel in rainbow colors
         for i in range (0, led):
@@ -152,6 +157,7 @@ def rainbowCycle(wait=200):
 
         strip.show()
         gc.collect()
+
         #check if thread got notificatio to exit and exit if it is so
         if waitForNotification(wait):
             return
