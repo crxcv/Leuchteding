@@ -29,6 +29,9 @@ song = "None"
 alarmSong = "Tetris"
 music_thread = 0
 ledColor = (245, 242, 22)
+
+#set to true to be able to send notifications to main thread
+_thread.replAcceptMsg(True)
 #connect to wifi or create access point
 connectSTA_AP.connect()
 utime.sleep_ms(200)
@@ -75,8 +78,8 @@ def handleLightThread(val):
         status = _thread.status(lightAnim_thread)
         #if status == _thread.RUNNING:
         print("stopping lightThread")
-        #_thread.stop(lightAnim_thread)
-        _thread.notify(lightAnim_thread, _thread.EXIT)
+        _thread.stop(lightAnim_thread)
+        #_thread.notify(lightAnim_thread, _thread.EXIT)
         #utime.sleep_ms(500)
         _thread.wait(500)
         lightAnim_thread = 0
@@ -209,29 +212,61 @@ def mainLoop():
                 lastMsAlarm = utime.ticks_ms()
 
         #check if lightAnim was set on website. returns "None" if none was set
-        light = srv.getLight()
-        if light is not "None":
-            print("light changed by webserver: {}".format(light))
-            _thread.lock()
-            if "Wave" in light:
-                lightCase = 9
-            elif "Ripple" in light:
-                lightCase = 8
-            elif "Sparkle" in light:
-                lightCase = 7
-            elif "MeteorRain" in light:
-                lightCase = 6
-            elif "RainbowCycle" in light:
-                lightCase = 5
-            elif "ColorGradient" in light:
-                lightCase = 4
-            elif "Fire" in light:
-                lightCase = 2
-            elif "Rainbow" in light:
-                lightCase = 1
-            elif "Off" in light:
-                lightCase = 0
-            _thread.unlock()
+        #light = srv.getLight()
+        msg = _thread.getmsg()
+        if (msg[0] == 2 and msg[1] == srv_thread):
+            values = msg[2].split(":")
+            if values[0] is "light":
+            #if light is not "None":
+                print("light changed by webserver: {}".format(light))
+                _thread.lock()
+                if "Wave" in values[1]:
+                    lightCase = 9
+                elif "Ripple" in values[1]:
+                    lightCase = 8
+                elif "Sparkle" in values[1]:
+                    lightCase = 7
+                elif "MeteorRain" in values[1]:
+                    lightCase = 6
+                elif "RainbowCycle" in values[1]:
+                    lightCase = 5
+                elif "ColorGradient" in values[1]:
+                    lightCase = 4
+                elif "Fire" in values[1]:
+                    lightCase = 2
+                elif "Rainbow" in values[1]:
+                    lightCase = 1
+                elif "Off" in values[1]:
+                    lightCase = 0
+                _thread.unlock()
+
+            #check if a new song was set on website, gets "None" if not
+            elif values[0] is "song":
+                alarmSong = values[1]
+                print("song set to: {}".format(song))
+                utime.sleep_ms(3000)
+                handleMusicThread(song)
+                utime.sleep_ms(2000)
+
+            #check if systemTime was changed on website
+            elif values[0] is "time":
+                date = tuple(map(int, values[1][1:-1].split(',')))
+                clock.init(newTime)
+                print("initialized new time: {}".format(newTime))
+                newTime = False
+            #check if alarmTime was set on website
+            elif values[0] is "alarm":
+                newAlarm = tuple(map(int, values[1][1:-1].split(',')))
+                millisToAlarm = setAlarmTime(int(newAlarm[0]), int(newAlarm[1]))
+                newAlarm = False
+            #utime.sleep_ms(400)
+
+            #check if LED colors were set on website
+            if values[0] is "colors":
+                ledColor = tuple(map(int, values[1][1:-1].split(',')))
+                print("new color from srv: {}".format(ledColor))
+                px.setAll(ledColor[0], ledColor[1], ledColor[2], 255)
+                utime.sleep_ms(300)
 
             #utime.sleep for more than one second is important, else system will crash
             _thread.wait(2000)
@@ -245,37 +280,6 @@ def mainLoop():
             _thread.wait(1000)
             #utime.sleep_ms(1000)
 
-        #check if a new song was set on website, gets "None" if not
-        song = srv.getSong()
-        if song is not "None":
-            print("song set to: {}".format(song))
-            alarmSong = song
-            utime.sleep_ms(3000)
-            handleMusicThread(song)
-            utime.sleep_ms(2000)
-
-
-        #check if systemTime was changed on website
-        newTime = srv.getTime()
-        if newTime is not "None":
-            clock.init(newTime)
-            print("initialized new time: {}".format(newTime))
-            newTime = False
-
-        #check if alarmTime was set on website
-        newAlarm = srv.getAlarm()
-        if newAlarm is not "None":
-            millisToAlarm = setAlarmTime(int(newAlarm[0]), int(newAlarm[1]))
-            newAlarm = False
-        #utime.sleep_ms(400)
-
-        #check if LED colors were set on website
-        col = srv.getColors()
-        if col is not "None":
-            ledColor = col
-            print("new color from srv: {}".format(ledColor))
-            px.setAll(ledColor[0], ledColor[1], ledColor[2], 255)
-            utime.sleep_ms(300)
 
         #get current systemTime in milliseconds
         currMs = utime.ticks_ms()
@@ -292,6 +296,6 @@ def mainLoop():
 
 
 #start server in thread
-srv.start()
-#mainLoop()
-mainTh = _thread.start_new_thread("main", mainLoop, ())
+srv_thread = srv.start()
+mainLoop()
+#main_thread = _thread.start_new_thread("main", mainLoop, ())
