@@ -13,17 +13,17 @@ alarmTime = (date[3], date[4])
 @MicroWebSrv.route('/', 'POST')
 def _httpHandlerPost(httpClient, httpResponse) :
 
-    _thread.lock()
+    #_thread.lock()()
     formData = httpClient.ReadRequestPostedFormData()
     #print(formData)
     if "light" in formData:
-        #_thread.lock()
+        ##_thread.lock()()
         #newLightPattern = True
         #lightPattern = formData["light"]
         _thread.sendmsg(_thread.getReplID(), "light:{}".format(formData["light"]))
-        #_thread.unlock()
+        ##_thread.unlock()()
     httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
-    _thread.unlock()
+    #_thread.unlock()()
 
 @MicroWebSrv.route('/led')
 @MicroWebSrv.route('/led', 'POST')
@@ -31,13 +31,13 @@ def _httpHandlerLEDPost(httpClient, httpResponse):
     colors=httpClient.ReadRequestContentAsJSON()#ReadRequestPostedFormData()# #Read JSON color data
     print(colors)
     if colors:
-        _thread.lock()
+        #_thread.lock()()
         #red, green, blue= [k for v, k in cols.items() )]
         red = colors.get('red')
         green = colors.get('green')
         blue= colors.get('blue')
         rgb = tuple((red, green, blue))
-        _thread.unlock()
+        #_thread.unlock()()
         print("rgb {}".format(rgb))
         _thread.sendmsg(_thread.getReplID, "colors:{}".format(rgb))
     httpResponse.WriteResponseFile(filepath = 'www/led.html', contentType= "text/html", headers = None)
@@ -50,7 +50,7 @@ def _httpHandlerAlarm(httpClient, httpResponse):
     #global clock
     global date
     global alarmTime
-    _thread.lock()
+    #_thread.lock()()
 
     formData = httpClient.ReadRequestPostedFormData()
     print(formData)
@@ -91,14 +91,12 @@ def _httpHandlerAlarm(httpClient, httpResponse):
     #time = str("{0}.{1}.{3} {4}:{5} Uhr".format(data[2], data[1], data[0], data[3], data[4]))
     html ="""\
         <html lang=de>
-
         <head>
           <title>RainbowWarrior Uhr- und Weckzeiteinstellungen</title>
           <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
           <link rel="stylesheet" href="bootstrap.min.css">
           <link rel="stylesheet" href="style.css">
         </head>
-
         <body class="h-100">
           <div class="ground"></div>
           <div class="sky">
@@ -198,7 +196,7 @@ def _httpHandlerAlarm(httpClient, httpResponse):
                                     contentType     = 'text/html',
                                     contentCharset  = 'UTF-8',
                                     content =html)
-    _thread.unlock()
+    #_thread.unlock()()
 
 def start():
     '''

@@ -1,21 +1,20 @@
 from machine import Pin, TouchPad, ADC, DAC, PWM, RTC, Timer, resetWDT
-import px as px
 import _thread, gc, utime
-import connectSTA_AP, songs
+import connectSTA_AP, songs, px
 import webSrv as srv
 
-newAlarm = False
-newTime = False
-newSong = False
-alarm = False
-lightOn = False
+isNewAlarm = False
+isNewTime = False
+isNewSong = False
+isAlarm = False
+isLightOn = False
 alarmTime = (0,0)
 currMs = 0
 lastMs = 0
 lastMsAlarm = 0
 timeCounterSecnds = 0
 millisToAlarm = 0
-#gets true if new AlarmTime was set, to print seconds to alarm in terminal
+#gets true if new AlarmTime was set, to print seconds to isAlarm in terminal
 countTime = False
 
 oldLightCase = 0
@@ -108,10 +107,10 @@ def _handleTimer(timer):
     '''timerhandler to start thread(s) if alarmTime is now
     '''
     global countTime
-    global alarm
+    global isAlarm
     global lastMsAlarm
     print("ALARM!")
-    alarm = True
+    isAlarm = True
     countTime = False
     lastMsAlarm = utime.ticks_ms()
     handleLightThread(alarmLightCase)
@@ -120,9 +119,9 @@ def _handleTimer(timer):
 
 def setAlarmTime(h, m):
     '''
-    calculates millis to next alarm and creates timer instance
+    calculates millis to next isAlarm and creates timer instance
     '''
-    print("setting alarm time ")
+    print("setting isAlarm time ")
     global clock
     global alarmTime
     global timer
@@ -141,13 +140,13 @@ def setAlarmTime(h, m):
     print("utime.mktime(currentTouple): {}".format(currTime_sec))
     #touple:
     #0: year    1: month 2: mday 3: hour 4: min 5: sec 6: weekday 7: yearday
-    #replace values of current time with hour and min from alarm time & get seconds to this time
+    #replace values of current time with hour and min from isAlarm time & get seconds to this time
     alarm_touple = (currTime_touple[0], currTime_touple[1],currTime_touple[2], h, m,  currTime_touple[5], currTime_touple[6], currTime_touple[7])
     alarm_sec= utime.mktime(alarm_touple)
     print("alarm_sec:{}".format(alarm_sec))
 
     #check if alarmTime is on this day or not
-    #substract alarm_sec from currTime_sec. if result equals or is more than 0, alarm must be now or in the past so we need to add secondsPerDay
+    #substract alarm_sec from currTime_sec. if result equals or is more than 0, isAlarm must be now or in the past so we need to add secondsPerDay
     alarm_sec = currTime_sec - alarm_sec
     #print("currTime_sec - alarm_sec: {} ".format(alarm_sec))
 
@@ -159,14 +158,14 @@ def setAlarmTime(h, m):
         print("alarm_sec < 0: {}".format(alarm_sec))
     #calculate ms from sec
     alarm_ms = int(alarm_sec * msPerSec)
-    print("ms to alarm: {}".format(alarm_ms))
+    print("ms to isAlarm: {}".format(alarm_ms))
     #initialize timer
     timer.init(period=alarm_ms, mode= timer.ONE_SHOT, callback= _handleTimer )
 
     return alarm_ms
 
 def mainLoop():
-    global alarm
+    global isAlarm
     global lightCase
     global oldLightCase
     global lastMs
@@ -179,36 +178,36 @@ def mainLoop():
         touchLightRatio = touchval / touchThreshold
         if .40 < touchLightRatio < .8:
             print("touched! touchLightRatio: {}".format(touchLightRatio))
-            #if alarm is set to True it means alarm is currently running
-            #touchSensor disables alarm
+            #if isAlarm is set to True it means isAlarm is currently running
+            #touchSensor disables isAlarm
             #IMPORTANT!!! add snooze function by counting how many seconds sensor was touched
-            if alarm: #newAlarm:
-                print("aborting alarm")
+            if isAlarm: #isNewAlarm:
+                print("aborting isAlarm")
                 handleLightThread(0)
                 handleMusicThread(0)
                 timer.deinit()
-                alarm = False
+                isAlarm = False
                 utime.sleep_ms(300)
             #if lightThread or musicThread is running, abort the thread and turn off sound or light
             elif _thread.status(lightAnim_thread) == _thread.RUNNING:
                 handleLightThread(0)
             elif _thread.status(music_thread) == _thread.RUNNING:
                 handleMusicThread(0)
-            #if no alarm is currently running, increase lightCase by one to toggle through lightAnimations
+            #if no isAlarm is currently running, increase lightCase by one to toggle through lightAnimations
             else:
                 lightCase += 1
                 utime.sleep_ms(100)
 
-        #if alarm is running let the LEDs blink twice per second
-        if alarm:
+        #if isAlarm is running let the LEDs blink twice per second
+        if isAlarm:
             currMs = utime.ticks_ms
             if utime.ticks_diff(utime.ticks_ms(), lastMsAlarm) >500:
-                if lightOn:
+                if isLightOn:
                     px.off()
-                    lightOn = False
+                    isLightOn = False
                 else:
                     px.setAll(ledColor[0], ledColor[1], ledColor[2], 255)
-                    lightOn = True
+                    isLightOn = True
                 lastMsAlarm = utime.ticks_ms()
 
         #check if lightAnim was set on website. returns "None" if none was set
@@ -219,7 +218,7 @@ def mainLoop():
             if values[0] is "light":
             #if light is not "None":
                 print("light changed by webserver: {}".format(light))
-                _thread.lock()
+                #_thread.lock()
                 if "Wave" in values[1]:
                     lightCase = 9
                 elif "Ripple" in values[1]:
@@ -238,7 +237,7 @@ def mainLoop():
                     lightCase = 1
                 elif "Off" in values[1]:
                     lightCase = 0
-                _thread.unlock()
+                #_thread.unlock()
 
             #check if a new song was set on website, gets "None" if not
             elif values[0] is "song":
@@ -251,14 +250,14 @@ def mainLoop():
             #check if systemTime was changed on website
             elif values[0] is "time":
                 date = tuple(map(int, values[1][1:-1].split(',')))
-                clock.init(newTime)
-                print("initialized new time: {}".format(newTime))
-                newTime = False
+                clock.init(isNewTime)
+                print("initialized new time: {}".format(isNewTime))
+                isNewTime = False
             #check if alarmTime was set on website
-            elif values[0] is "alarm":
-                newAlarm = tuple(map(int, values[1][1:-1].split(',')))
-                millisToAlarm = setAlarmTime(int(newAlarm[0]), int(newAlarm[1]))
-                newAlarm = False
+            elif values[0] is "isAlarm":
+                isNewAlarm = tuple(map(int, values[1][1:-1].split(',')))
+                millisToAlarm = setAlarmTime(int(isNewAlarm[0]), int(isNewAlarm[1]))
+                isNewAlarm = False
             #utime.sleep_ms(400)
 
             #check if LED colors were set on website
@@ -288,9 +287,9 @@ def mainLoop():
             lastMs = utime.ticks_ms()
             #_thread.list()
             #print(ldrVal)
-            #show countdown to alarm on terminal
+            #show countdown to isAlarm on terminal
             if countTime:
-                print("{} seconds to alarm".format(int(millisToAlarm/1000)))
+                print("{} seconds to isAlarm".format(int(millisToAlarm/1000)))
                 millisToAlarm = millisToAlarm -1000
         utime.sleep_ms(150)
 
