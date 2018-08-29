@@ -1,4 +1,5 @@
 import  machine, math, random, gc, neopixel
+import _thread
 from utime import sleep_ms
 pin = 14
 led = 39#12
@@ -10,10 +11,18 @@ fact_cache = {}
 threecolors = {"0xff0000", "0x00ff00", "0x00ffff"}
 
 lightAnim_thread = 0
+is_aborted = False
 
 #for fire function
 w, h = 3, led
 #oldColor = [[ 0x00 for x in range (w)] for y in range(h)]
+
+def abort_thread():
+    global is_aborted
+    lock = _thread.allocate_lock()
+    lock.acquire()
+    is_aborted = True
+    lock.release()
 
 # def waitForNotification(timeout = 20):
 #     """#check for thread notifications
@@ -26,7 +35,7 @@ w, h = 3, led
 #         gc.collect()
 #         return True
 #     return False
-
+#
 #set brightness
 def setBrightness(ldrVal):
     """setBrightnes(ldrVal)
@@ -155,8 +164,10 @@ def rainbowCycle(wait=500):
             strip[i]= RGB
         strip.write()
         gc.collect()
-
         sleep_ms(wait)
+        if is_aborted:
+            is_aborted = False
+            _thread.exit()
 
     print("all cycles done")
 
@@ -277,10 +288,13 @@ def fire(cooling = 70, sparkling = 140, speedDelay = 200):
             #setPixelHeatColor(int(led/2)-j, heat[j])
             #setPixelHeatColor(int(led/2)+j, heat[j])
         strip.write()
+        gc.collect()
         #check if thread got notificatio to exit and exit if it is so
         sleep_ms(speedDelay)
-        #sleep_ms(speedDelay)
-        gc.collect()
+        if is_aborted:
+            is_aborted = False
+            _thread.exit()
+
 
 def setPixelHeatColor(pixel, temp):
     global brightness
@@ -341,6 +355,9 @@ def meteorRain(red=0xff, green=0xff, blue=0xff, meteorSize = 7, meteorTrailDecay
             strip.write()
             gc.collect()
             sleep_ms(speedDelay)
+            if is_aborted:
+                is_aborted = False
+                _thread.exit()
 # ------------------ meteor end ----------------------------------
 
 #-------------------sparkle----------------------------------
@@ -363,6 +380,9 @@ def sparkle():
         sleep_ms(200)
         strip.clear
         gc.collect()
+        if is_aborted:
+            is_aborted = False
+            _thread.exit()
 #---------------------end of sparkle-------------------------
 
 #-------------------------wave-----------------------------------
@@ -394,6 +414,9 @@ def wave():
         frame += 1000
         gc.collect()
         sleep_ms(1000)
+        if is_aborted:
+            is_aborted = False
+            _thread.exit()
 #-----------------end of wave-------------------------
 
 #------------------ripple-----------------------------
@@ -447,6 +470,9 @@ def ripple():
         gc.collect()
         #sleep_ms(100)
         sleep_ms(100)
+        if is_aborted:
+            is_aborted = False
+            _thread.exit()
 #------------------end of ripple--------------------------
 
 #turn off all pixels

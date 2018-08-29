@@ -8,19 +8,32 @@ srv_run_in_thread = True
 date= utime.localtime()#(0, 0, 0, 0, 0)
 alarmTime = (date[3], date[4])
 
-pipe_conn = None
+lock = _thread.allocate_lock()
+#pipe_conn = None
+return_data = "none"
+is_new_data = False
 
+def get_data():
+    if is_new_data:
+        lock.acquire()
+        is_new_data = False
+        lock.release()
+        return return_data
+    return False
 
 #route handler for http-post requests
 @MicroWebSrv.route('/', 'POST')
 def _httpHandlerPost(httpClient, httpResponse) :
-
+    global is_new_data, return_data
     formData = httpClient.ReadRequestPostedFormData()
     #print(formData)
     if "light" in formData:
         #newLightPattern = True
-        #lightPattern = formData["light"]
-        pipe_conn.send("light:{}".format(formData["light"]))
+        lightPattern = formData["light"]
+        lock.acquire()
+        is_new_data = True
+        lock.release()
+        return_data = "light:{}".format(formData["light"])
     httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
 
 @MicroWebSrv.route('/led')
@@ -198,8 +211,8 @@ def start(connection):
     '''
     create server instance and start server
     '''
-    global pipe_conn
-    pipe_conn = connection
+    #global pipe_conn
+    #pipe_conn = connection
     srv = MicroWebSrv(webPath = 'www')
     print("Server...")
     srv.Start(threaded = srv_run_in_thread, stackSize= 8192)
