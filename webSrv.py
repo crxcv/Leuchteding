@@ -8,22 +8,20 @@ srv_run_in_thread = True
 date= utime.localtime()#(0, 0, 0, 0, 0)
 alarmTime = (date[3], date[4])
 
+pipe_conn = None
+
 
 #route handler for http-post requests
 @MicroWebSrv.route('/', 'POST')
 def _httpHandlerPost(httpClient, httpResponse) :
 
-    _thread.lock()
     formData = httpClient.ReadRequestPostedFormData()
     #print(formData)
     if "light" in formData:
-        #_thread.lock()
         #newLightPattern = True
         #lightPattern = formData["light"]
-        _thread.sendmsg(_thread.getReplID(), "light:{}".format(formData["light"]))
-        #_thread.unlock()
+        pipe_conn.send("light:{}".format(formData["light"]))
     httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
-    _thread.unlock()
 
 @MicroWebSrv.route('/led')
 @MicroWebSrv.route('/led', 'POST')
@@ -31,15 +29,13 @@ def _httpHandlerLEDPost(httpClient, httpResponse):
     colors=httpClient.ReadRequestContentAsJSON()#ReadRequestPostedFormData()# #Read JSON color data
     print(colors)
     if colors:
-        _thread.lock()
         #red, green, blue= [k for v, k in cols.items() )]
         red = colors.get('red')
         green = colors.get('green')
         blue= colors.get('blue')
         rgb = tuple((red, green, blue))
-        _thread.unlock()
         print("rgb {}".format(rgb))
-        _thread.sendmsg(_thread.getReplID, "colors:{}".format(rgb))
+        pipe_conn.send("colors:{}".format(rgb))
     httpResponse.WriteResponseFile(filepath = 'www/led.html', contentType= "text/html", headers = None)
 
 
@@ -50,7 +46,6 @@ def _httpHandlerAlarm(httpClient, httpResponse):
     #global clock
     global date
     global alarmTime
-    _thread.lock()
 
     formData = httpClient.ReadRequestPostedFormData()
     print(formData)
@@ -73,18 +68,18 @@ def _httpHandlerAlarm(httpClient, httpResponse):
         #print("time set by srv to {0}:{1} {2}.{3}.{4}".format(hour, min, day, month, year))
         date=(year, month, day, hour, min)
         print("time set to: {}".format(date))
-        _thread.sendmsg(_thread.getReplID(), "time:{}".format(date))
+        pipe_conn.send("time:{}".format(date))
 
     if "setAlarm" in formData:
         hour =  int(formData["alarmTime"].split(':')[0])
         min =   int(formData["alarmTime"].split(':')[1])
         #print("alarm set by srv to {0}:{1}".format(hour, min))
         alarmTime = (hour, min)
-        _thread.sendmsg(_thread.getReplID(), "alarm:{}".format(alarmTime))
+        pipe_conn.send("alarm:{}".format(alarmTime))
 
     if "setSound" in formData:
         song = formData["setSound"]
-        _thread.sendmsg(_thread.getReplID(), "Song:{}".format(song))
+        pipe_conn.send("Song:{}".format(song))
         #print (formData)
     #0: year    1: month 2: mday 3: hour 4: min 5: sec 6: weekday 7: yearday
     #data = RTC.now()
@@ -198,17 +193,14 @@ def _httpHandlerAlarm(httpClient, httpResponse):
                                     contentType     = 'text/html',
                                     contentCharset  = 'UTF-8',
                                     content =html)
-    _thread.unlock()
 
-def start():
+def start(connection):
     '''
     create server instance and start server
     '''
-    #global mainThread
-
+    global pipe_conn
+    pipe_conn = connection
     srv = MicroWebSrv(webPath = 'www')
     print("Server...")
     srv.Start(threaded = srv_run_in_thread, stackSize= 8192)
     print("...started")
-    #mainThread = _thread.getReplID()
-    return srv.threadID()

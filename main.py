@@ -1,7 +1,7 @@
-from machine import Pin, TouchPad, ADC, DAC, PWM, RTC, Timer, resetWDT
-import px as px
-import _thread, gc, utime
-import connectSTA_AP, songs
+from machine import Pin, TouchPad, ADC, DAC, PWM, RTC, Timer
+from multiprocessing import Process, Pipe
+import gc, utime
+import connectSTA_AP, songs, px
 import webSrv as srv
 
 newAlarm = False
@@ -22,22 +22,20 @@ oldLightCase = 0
 alarmLightCase = 3
 lightCase = 0
 light = "None"
-lightAnim_thread = 0
+lightAnim_proc = 0
 brightnessVal = 0
 oldBrightnessVal = 0
 song = "None"
 alarmSong = "Tetris"
-music_thread = 0
+music_proc = 0
 ledColor = (245, 242, 22)
 
-#set to true to be able to send notifications to main thread
-_thread.replAcceptMsg(True)
 #connect to wifi or create access point
 connectSTA_AP.connect()
 utime.sleep_ms(200)
 #create realTimeClock instance and synchronize with online clock if possible
 clock= RTC()
-date = clock.now()
+date = clock.datetime()
 timer = Timer(0)
 
 def readTouchPin():
@@ -69,39 +67,33 @@ def touchLightCallback(touchLight):
 def handleLightThread(val):
     '''stops current running light animation and starts new one with given value
     '''
-    global lightAnim_thread
+    global lightAnim_proc
     print("handleLightThread")
     #print("server thread suspended")
-    if lightAnim_thread != 0:
+    if lightAnim_proc.is_alive():
         #utime.sleep_ms(500)
-        _thread.wait(500)
-        status = _thread.status(lightAnim_thread)
-        #if status == _thread.RUNNING:
         print("stopping lightThread")
-        _thread.stop(lightAnim_thread)
-        #_thread.notify(lightAnim_thread, _thread.EXIT)
-        #utime.sleep_ms(500)
-        _thread.wait(500)
-        lightAnim_thread = 0
+        lightAnim_proc.terminate()
+        utime.sleep_ms(500)
+        lightAnim_proc = 0
     #if lights should be turned off, return. turning off is done by thread.stop()
     if val is 0:
         return
 
-    _thread.stack_size(22*1024)
-    lightAnim_thread = _thread.start_new_thread("lightAnim", px.thread, (val,))
+    lightAnim_proc = Process(target = px.thread, args =(val,))
+    lightAnim_proc.start()
     utime.sleep_ms(1000)
     #px.thread(val)
 
 def handleMusicThread(val):
     '''stops current musicThread if runing and starts a new one with given value
     '''
-    global music_thread
-    if music_thread is not 0:
+    global music_proc
+    if music_proc.is_alive():
         print("stopping musicThread")
-        _thread.notify(music_thread, _thread.EXIT)
+        music_proc.terminate()
         utime.sleep_ms(200)
-        music_thread = 0
-    music_thread = _thread.start_new_thread("musicThread", songs.find_song, (val,))
+    music_proc =Process(target = songs.find_song, args= (val,))
     #utime.sleep_ms(500)
 
 def _handleTimer(timer):
@@ -134,14 +126,14 @@ def setAlarmTime(h, m):
     secondsPerMin = 60
     msPerSec = 1000
 
-    #get actual time as touple
+    #recv actual time as touple
     currTime_touple = utime.localtime()
     #convert tuple to sec
     currTime_sec = utime.mktime(currTime_touple)
     print("utime.mktime(currentTouple): {}".format(currTime_sec))
     #touple:
     #0: year    1: month 2: mday 3: hour 4: min 5: sec 6: weekday 7: yearday
-    #replace values of current time with hour and min from alarm time & get seconds to this time
+    #replace values of current time with hour and min from alarm time & recv seconds to this time
     alarm_touple = (currTime_touple[0], currTime_touple[1],currTime_touple[2], h, m,  currTime_touple[5], currTime_touple[6], currTime_touple[7])
     alarm_sec= utime.mktime(alarm_touple)
     print("alarm_sec:{}".format(alarm_sec))
@@ -190,9 +182,9 @@ def mainLoop():
                 alarm = False
                 utime.sleep_ms(300)
             #if lightThread or musicThread is running, abort the thread and turn off sound or light
-            elif _thread.status(lightAnim_thread) == _thread.RUNNING:
-                handleLightThread(0)
-            elif _thread.status(music_thread) == _thread.RUNNING:
+            elif lightAnim_proc.is_alive():
+                    handleLightThread(0)
+            elif music_proc.is_alive():
                 handleMusicThread(0)
             #if no alarm is currently running, increase lightCase by one to toggle through lightAnimations
             else:
@@ -213,13 +205,12 @@ def mainLoop():
 
         #check if lightAnim was set on website. returns "None" if none was set
         #light = srv.getLight()
-        msg = _thread.getmsg()
-        if (msg[0] == 2 and msg[1] == srv_thread):
+        msg = parent_conn.recv()
+        if (msg[0] == 2 and msg[1] == srv_proc):
             values = msg[2].split(":")
             if values[0] is "light":
             #if light is not "None":
                 print("light changed by webserver: {}".format(light))
-                _thread.lock()
                 if "Wave" in values[1]:
                     lightCase = 9
                 elif "Ripple" in values[1]:
@@ -238,7 +229,6 @@ def mainLoop():
                     lightCase = 1
                 elif "Off" in values[1]:
                     lightCase = 0
-                _thread.unlock()
 
             #check if a new song was set on website, gets "None" if not
             elif values[0] is "song":
@@ -269,7 +259,7 @@ def mainLoop():
                 utime.sleep_ms(300)
 
             #utime.sleep for more than one second is important, else system will crash
-            _thread.wait(2000)
+            utime.sleep_ms(2000)
             #utime.sleep_ms(2000)
 
         #check if lightCase has changed to know if new lightAnim should be started
@@ -277,16 +267,14 @@ def mainLoop():
             print("lightCase changed: {}".format(lightCase))
             oldLightCase = lightCase
             handleLightThread(lightCase)
-            _thread.wait(1000)
-            #utime.sleep_ms(1000)
+            utime.sleep_ms(1000)
 
 
-        #get current systemTime in milliseconds
+        #recv current systemTime in milliseconds
         currMs = utime.ticks_ms()
         #execute containing code only once per second
         if utime.ticks_diff(utime.ticks_ms(), lastMs) >=1000:
             lastMs = utime.ticks_ms()
-            #_thread.list()
             #print(ldrVal)
             #show countdown to alarm on terminal
             if countTime:
@@ -294,8 +282,11 @@ def mainLoop():
                 millisToAlarm = millisToAlarm -1000
         utime.sleep_ms(150)
 
-
+#create Pipe instance to send values/messages from server to main
+#parent_conn can only receive messages while child_conn can only send messages
+parent_conn, child_conn = Pipe(duplex = False)
 #start server in thread
-srv_thread = srv.start()
+srv_proc = Process(target = srv.start, args=(child_conn,))
+srv_proc.start()
+srv_proc.join()
 mainLoop()
-#main_thread = _thread.start_new_thread("main", mainLoop, ())

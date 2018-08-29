@@ -5,14 +5,12 @@
 #
 from machine import Pin, PWM
 import time, math, gc
-import _thread
 from rtttl import RTTTL
 
-piezoPin = 22
+piezoPin = Pin(22)
 #initialize and deinitialize piezo once as sound-feedback for start of programm
 piezo = PWM(piezoPin)
 piezo.deinit()
-_thread.allowsuspend(True)
 #piezo = PWM(piezoPin)
 
 SONGS = [
@@ -82,17 +80,4 @@ def find_song(name):
             tune = RTTTL(song)
             for freq, msec in tune.notes():
                 play_tone(freq, msec)
-                ntf = _thread.getnotification()
-                if ntf == _thread.EXIT:
-                    piezo.deinit()
-                    time.sleep_ms(500)
-                    gc.collect()
-                    return
             piezo.deinit()
-
-
-#def find(name):
-#    for song in SONGS:
-#        song_name = song.split(':')[0]
-#        if song_name == name:
-#            return song

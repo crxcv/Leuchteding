@@ -5,8 +5,8 @@ sta_if = False
 def connect():
     global ap_if
     global sta_if
-    STA_SSID = "your-ssid"
-    STA_PSK  = "your-PW"
+    STA_SSID = "crfb"
+    STA_PSK  = "CS10Ok09"
     ssid = "esp32"
     pw = "HuchEinPw"
 
@@ -30,11 +30,11 @@ def connect():
     ap_if.config(essid = ssid, password = pw)
 
     timeout = 50
-    while not ap_if.isconnected(False):
+    while not ap_if.isconnected():
         utime.sleep_ms(100)
         timeout -= 1
         if timeout == 0:
-            break
+            return
     print("======= AP connected ========")
     print(ap_if.ifconfig)
 
