@@ -8,87 +8,91 @@ srv_run_in_thread = True
 date= utime.localtime()#(0, 0, 0, 0, 0)
 alarmTime = (date[3], date[4])
 
-
 #route handler for http-post requests
 @MicroWebSrv.route('/', 'POST')
 def _httpHandlerPost(httpClient, httpResponse) :
-
-    #_thread.lock()()
     formData = httpClient.ReadRequestPostedFormData()
     if formData:
         # send notification value to all threads so they can abort
         # 0 as 1st argument means that notification goes to every thread
         _thread.notify(0, 666)
+
         #print(formData)
         if "light" in formData:
-            ##_thread.lock()()
             _thread.sendmsg(_thread.getReplID(), "light:{}".format(formData["light"]))
-            ##_thread.unlock()()
+
+    _thread.notify(0, _thread.SUSPEND)
+    #_thread.wait()
     httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
-    gc.collect()
-    #_thread.unlock()()
+    #_thread.notify(0, _thread.RESUME)
+
 
 @MicroWebSrv.route('/led')
 @MicroWebSrv.route('/led', 'POST')
 def _httpHandlerLEDPost(httpClient, httpResponse):
     colors=httpClient.ReadRequestContentAsJSON()#ReadRequestPostedFormData()# #Read JSON color data
     print(colors)
+    _thread.notify(0, 666)
+
     if colors:
-        #_thread.lock()()
-        #red, green, blue= [k for v, k in cols.items() )]
+        # send notification value to all threads so they can abort
+        # 0 as 1st argument means that notification goes to every thread
         red = colors.get('red')
         green = colors.get('green')
         blue= colors.get('blue')
         rgb = tuple((red, green, blue))
-        #_thread.unlock()()
         print("rgb {}".format(rgb))
-        _thread.sendmsg(_thread.getReplID, "colors:{}".format(rgb))
+        _thread.sendmsg(_thread.getReplID(), "colors:{}".format(rgb))
+    _thread.notify(0, _thread.SUSPEND)
     httpResponse.WriteResponseFile(filepath = 'www/led.html', contentType= "text/html", headers = None)
 
 
 @MicroWebSrv.route('/alarm')
 @MicroWebSrv.route('/alarm', 'POST')
 def _httpHandlerAlarm(httpClient, httpResponse):
+    # send notification value to all threads so they can abort
+    # 0 as 1st argument means that notification goes to every thread
+    _thread.notify(0, 666)
 
-    #global clock
     global date
     global alarmTime
-    #_thread.lock()()
 
     formData = httpClient.ReadRequestPostedFormData()
     print(formData)
     date = utime.localtime()
+    if formData:
 
-    if "time" in formData:
-        #string formatting:
-        # >>> '%0.2d' %(3)
-        #'03'
-        #>>> '%0.2d' %(10)
-        #'10'
-        #newDate=formData["date"])
-        day =   int(formData["date"].split('.')[0])
-        month = int(formData["date"].split('.')[1])
-        year =  int(formData["date"].split('.')[2])
+        if "time" in formData:
+            #string formatting:
+            # >>> '%0.2d' %(3)
+            #'03'
+            #>>> '%0.2d' %(10)
+            #'10'
+            #newDate=formData["date"])
 
-        #newTime = int(formData["time"])
-        hour =  int(formData["time"].split(':')[0])
-        min =   int(formData["time"].split(':')[1])
-        #print("time set by srv to {0}:{1} {2}.{3}.{4}".format(hour, min, day, month, year))
-        date=(year, month, day, hour, min)
-        print("time set to: {}".format(date))
-        _thread.sendmsg(_thread.getReplID(), "time:{}".format(date))
+            day =   int(formData["date"].split('.')[0])
+            month = int(formData["date"].split('.')[1])
+            year =  int(formData["date"].split('.')[2])
 
-    if "setAlarm" in formData:
-        hour =  int(formData["alarmTime"].split(':')[0])
-        min =   int(formData["alarmTime"].split(':')[1])
-        #print("alarm set by srv to {0}:{1}".format(hour, min))
-        alarmTime = (hour, min)
-        _thread.sendmsg(_thread.getReplID(), "alarm:{}".format(alarmTime))
+            #newTime = int(formData["time"])
+            hour =  int(formData["time"].split(':')[0])
+            min =   int(formData["time"].split(':')[1])
+            #print("time set by srv to {0}:{1} {2}.{3}.{4}".format(hour, min, day, month, year))
+            date=(year, month, day, hour, min)
+            print("time set to: {}".format(date))
+            _thread.sendmsg(_thread.getReplID(), "time:{}".format(date))
 
-    if "setSound" in formData:
-        song = formData["setSound"]
-        _thread.sendmsg(_thread.getReplID(), "song:{}".format(song))
-        #print (formData)
+        if "setAlarm" in formData:
+            hour =  int(formData["alarmTime"].split(':')[0])
+            min =   int(formData["alarmTime"].split(':')[1])
+            #print("alarm set by srv to {0}:{1}".format(hour, min))
+            alarmTime = (hour, min)
+            _thread.sendmsg(_thread.getReplID(), "alarm:{}".format(alarmTime))
+
+        if "setSound" in formData:
+            song = formData["setSound"]
+            _thread.sendmsg(_thread.getReplID(), "song:{}".format(song))
+            #print (formData)
     #0: year    1: month 2: mday 3: hour 4: min 5: sec 6: weekday 7: yearday
     #data = RTC.now()
     #time = str("{0}.{1}.{3} {4}:{5} Uhr".format(data[2], data[1], data[0], data[3], data[4]))
@@ -195,11 +199,12 @@ def _httpHandlerAlarm(httpClient, httpResponse):
         </body>
         </html>
     """.format(date[2], date[1], date[0], date[3], date[4], alarmTime[0], alarmTime[1])#.format(0, 1, 2, 3,4, 5)#
+    _thread.notify(0, _thread.SUSPEND)
     httpResponse.WriteResponseOk(   headers         = ({'Cache-Control': 'no-cache'}),
                                     contentType     = 'text/html',
                                     contentCharset  = 'UTF-8',
                                     content =html)
-    #_thread.unlock()()
+    _thread.notify(0, _thread.RESUME)
 
 def start():
     '''

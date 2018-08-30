@@ -2,8 +2,8 @@ import network, utime
 
 def connect():
     #login data for your router
-    STA_SSID = "deine-SSID"
-    STA_PSK  = "dein-Passwort"
+    STA_SSID = "crfb"
+    STA_PSK  = "CS10Ok09"
 
     #login data for esp32
     ssid = "esp32"

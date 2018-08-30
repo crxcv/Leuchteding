@@ -20,7 +20,7 @@ _thread.allowsuspend(True)
 w, h = 3, num_led
 
 # uses _thread.wait(timeout) to sleep for (timeout) ms and check for notifications
-# from main thread or webserver in meanwhile
+# from main thread (_thread.EXIT) or webserver (666) in meanwhile
 def waitForNotification(timeout = 20):
     ntf = _thread.wait(timeout)
     if (ntf == _thread.EXIT or ntf == 666):
@@ -28,10 +28,14 @@ def waitForNotification(timeout = 20):
         strip.clear()
         # gc.collect()
         return True
+    elif ntf == _thread.SUSPEND:
+        print("light suspended")
+        _thread.wait(2000)
+        print("light resumed")
     return False
 
 # maps ldrVal (between 0 and 1059) to number between 0 and 255 and sets num_led brightness
-def setBrightness(ldrVal):
+def set_brightness(ldrVal):
     """setBrightnes(ldrVal)
     maps the ldrVal (between 0 and 1024) to the brightness value (between 0 and 255)
     ldrVal: value read by ldr sensor
@@ -137,8 +141,6 @@ def rainbow(wait = 0):
         colInt = int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB]))
         strip.set(i, colInt, update=False)
     strip.show()
-    # gc.collect()
-    #sleep_ms(wait)
 
 # Slightly different, this makes the rainbow equally distributed throughout
 def rainbowCycle(wait=500):
@@ -239,7 +241,6 @@ def bezier_gradient(colors=None, n_out=None):
         strip.set(n,  gradient[n], update=False)
         #strip.set((num_led-n), gradient[n], update=False)
     strip.show()
-    # gc.collect()
 
     #{"#00173d", "#f75002", "#01f2f7"}
     #for col in colors:
@@ -252,7 +253,7 @@ def bezier_gradient(colors=None, n_out=None):
 # ---------- end of bezier_gradient-------------
 
 # ------------ fire -------------------- (55, 120, 15)-orig. (70,140,20)-custom
-def fire(cooling = 70, sparkling = 140, speedDelay = 200):
+def fire(cooling = 70, sparkling = 140, speedDelay = 15):
     #w, h = 3, num_led
 
     print("fire")
