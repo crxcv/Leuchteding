@@ -83,16 +83,9 @@ def find_song(name):
             for freq, msec in tune.notes():
                 play_tone(freq, msec)
                 ntf = _thread.getnotification()
-                if ntf == _thread.EXIT:
+                if (ntf == _thread.EXIT or nft == 666):
                     piezo.deinit()
                     time.sleep_ms(500)
                     gc.collect()
                     return
             piezo.deinit()
-
-
-#def find(name):
-#    for song in SONGS:
-#        song_name = song.split(':')[0]
-#        if song_name == name:
-#            return song

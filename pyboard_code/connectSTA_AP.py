@@ -1,17 +1,23 @@
 import network, utime
 
 def connect():
+    #login data for your router
+    STA_SSID = "deine-SSID"
+    STA_PSK  = "dein-Passwort"
 
-    STA_SSID = "deine-ssid"
-    STA_PSK  = "dein-passwort"
+    #login data for esp32
     ssid = "esp32"
     pw = "HuchEinPw"
+
     hostname = "RainbowWarrior"
 
+    #create network.WLAN instances for accesspoint (esp as access point) ..
     ap_if = network.WLAN(network.AP_IF)
+    # ..and for station mode (when esp connects to another accesspoint/router)
     sta_if = network.WLAN(network.STA_IF)
 
-    sta_if.active()
+    # activate station mode and connect to the local accesspoint
+    sta_if.active(True)
     sta_if.connect(STA_SSID, STA_PSK)
 
     #try to connect to the router for a while. if no connection was established abort

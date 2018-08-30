@@ -15,14 +15,17 @@ def _httpHandlerPost(httpClient, httpResponse) :
 
     #_thread.lock()()
     formData = httpClient.ReadRequestPostedFormData()
-    #print(formData)
-    if "light" in formData:
-        ##_thread.lock()()
-        #newLightPattern = True
-        #lightPattern = formData["light"]
-        _thread.sendmsg(_thread.getReplID(), "light:{}".format(formData["light"]))
-        ##_thread.unlock()()
+    if formData:
+        # send notification value to all threads so they can abort
+        # 0 as 1st argument means that notification goes to every thread
+        _thread.notify(0, 666)
+        #print(formData)
+        if "light" in formData:
+            ##_thread.lock()()
+            _thread.sendmsg(_thread.getReplID(), "light:{}".format(formData["light"]))
+            ##_thread.unlock()()
     httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
+    gc.collect()
     #_thread.unlock()()
 
 @MicroWebSrv.route('/led')
@@ -84,7 +87,7 @@ def _httpHandlerAlarm(httpClient, httpResponse):
 
     if "setSound" in formData:
         song = formData["setSound"]
-        _thread.sendmsg(_thread.getReplID(), "Song:{}".format(song))
+        _thread.sendmsg(_thread.getReplID(), "song:{}".format(song))
         #print (formData)
     #0: year    1: month 2: mday 3: hour 4: min 5: sec 6: weekday 7: yearday
     #data = RTC.now()
