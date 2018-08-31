@@ -73,10 +73,10 @@ touch = machine.TouchPad(machine.Pin(touchPin))
 touchThreshold = readTouchPin() #touch.read()#sum(thresholdLight)//len(thresholdLight)
 
 #interruptHandler for touch pin
-def touchLightCallback(touch):
-    global light_val
-    global touchThreshold
-    light_val = light_val +1
+# def touchLightCallback(touch):
+#     global light_val
+#     global touchThreshold
+#     light_val = light_val +1
 
 def handleLightThread(val):
     '''stops current running light animation and starts new one with given value
@@ -89,8 +89,7 @@ def handleLightThread(val):
         print("stopping lightThread")
         _thread.notify(lightAnim_thread, _thread.EXIT)
         _thread.wait(wait_after_stop_thread)
-    #lightAnim_thread = 0
-    #_thread.wait(100)
+
     else:
         px.off()
 
@@ -101,7 +100,6 @@ def handleLightThread(val):
     _thread.wait(wait_before_start_thread)
     _thread.stack_size(8*1024)
     lightAnim_thread = _thread.start_new_thread("lightThread", px.thread, (val,))
-    #utime.sleep_ms(1000)
 
 def handleMusicThread(val):
     '''stops current musicThread if runing and starts a new one with given value
@@ -129,6 +127,7 @@ def _handleTimer(timer):
     count_time = False
     last_ms_alarm = utime.ticks_ms()
     handleMusicThread(alarm_song)
+    #handleLightThread(light_val)
 
 def setAlarmTime(h, m):
     '''
@@ -189,28 +188,21 @@ while True:
     if .35 < touchLightRatio < .6:
         print("touched! touchLightRatio: {}".format(touchLightRatio))
 
-        # if lightThread or musicThread is running, abort the thread and turn off sound or light
-        # to prevent system from crash if webserver is used
-        if (_thread.status(lightAnim_thread) != _thread.TERMINATED or _thread.status(music_thread) != _thread.TERMINATED):
-            handleLightThread(0)
-            handleMusicThread(0)
-
         #if is_alarm_running is set to True it means is_alarm_running is currently running
         #touchSensor disables is_alarm_running
         #IMPORTANT!!! add snooze function by counting how many seconds sensor was touched
-        elif is_alarm_running: #is_new_alarm:
-            print("aborting is_alarm_running")
+        if is_alarm_running:
+            print("aborting alarm")
             handleLightThread(0)
             handleMusicThread(0)
             timer.deinit()
             is_alarm_running = False
-            utime.sleep_ms(300)
 
-        # if no is_alarm_running is currently running,
+        # if no alarm is currently running,
         # increase light_val by one to toggle through lightAnimations
         else:
             light_val += 1
-            utime.sleep_ms(100)
+            #utime.sleep_ms(100)
 
     # check if lightAnim was set on website. returns "None" if none was set
     # light = srv.getLight()
@@ -248,11 +240,14 @@ while True:
         #check if systemTime was set on website
         elif values[0] is "time":
             date = tuple(map(int, values[1][1:-1].split(',')))
+            _thread.wait(300)
             clock.init(date)
             print("initialized new time: {}".format(date))
+
         #check if alarm_time was set on website
         elif values[0] is "alarm":
             new_alarm = tuple(map(int, values[1][1:-1].split(',')))
+            _thread.wait(300)
             ms_to_alarm = setAlarmTime(int(new_alarm[0]), int(new_alarm[1]))
 
         #check if LED colors were set on website
@@ -277,12 +272,12 @@ while True:
         last_ms = utime.ticks_ms()
         #show countdown to is_alarm_running on terminal
         if count_time:
-            print("{} seconds to is_alarm_running".format(int(ms_to_alarm/1000)))
+            print("{} seconds to alarm".format(int(ms_to_alarm/1000)))
             ms_to_alarm = ms_to_alarm -1000
 
     # read light resistor once per minute and set brightness of led according to value
     curr_ms = utime.ticks_ms()
-    if utime.ticks_diff(utime.ticks_ms(), last_ms_ldr) >= (1000 * 60):#())
+    if utime.ticks_diff(utime.ticks_ms(), last_ms_ldr) >= (1000 * 60):
         last_ms_ldr = curr_ms
         ldr_val = ldr.read()
         px.set_brightness(ldr_val)
@@ -298,6 +293,8 @@ while True:
                 px.setAll(led_color[0], led_color[1], led_color[2], 255)
                 is_light_on = True
             last_ms_alarm = utime.ticks_ms()
+        if _thread.status(music_thread) == _thread.TERMINATED:
+            _thread.start_new_thread("musicThread", songs.find_song(alarm_song))
 
 
     utime.sleep_ms(150)

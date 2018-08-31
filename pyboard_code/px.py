@@ -153,6 +153,7 @@ def rainbowCycle(wait=500):
     print("rainbowCycle")
 
     #for j in range (256): #1 cycles of all colors on wheel
+    j=0
     while True:
         #set all pixel in rainbow colors
         for i in range (0, num_led):
@@ -163,6 +164,7 @@ def rainbowCycle(wait=500):
             strip.set(i, colInt, update=False)
 
         strip.show()
+        j += 1
 
         # wait for (wait) ms & check if thread got notificatio to exit. exit if it is so
         if waitForNotification(wait):
