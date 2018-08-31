@@ -4,8 +4,7 @@
 # http://www.picaxe.com/RTTTL-Ringtones-for-Tune-Command/
 #
 from machine import Pin, PWM
-import time, math, gc
-import _thread
+import _thread, math
 from rtttl import RTTTL
 
 piezoPin = 22
@@ -46,6 +45,20 @@ SONGS = [
     'Tetris:d=4,o=5,b=160:e6,8b,8c6,8d6,16e6,16d6,8c6,8b,a,8a,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,2a,8p,d6,8f6,a6,8g6,8f6,e6,8e6,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,a'
 ]
 
+# uses _thread.wait(timeout) to sleep for (timeout) ms and check for notifications
+# from main thread (_thread.EXIT) or webserver (666) in meanwhile
+def waitForNotification(timeout):
+    ntf = _thread.wait(timeout)
+    if (ntf == _thread.EXIT or ntf == 666):
+        print("exiting music. Notification: {}".format(ntf))
+        #piezo.deinit()
+        return True
+    elif ntf == _thread.SUSPEND:
+        print("music suspended")
+        _thread.wait(2000)
+        print("music resumed")
+    return False
+
 def play_tone(freq, msec):
     """play_tone(freq, msec)
     plays a single tone on piezo buzzer
@@ -57,10 +70,12 @@ def play_tone(freq, msec):
     if freq >0:
         piezo.freq(int(freq))
         piezo.duty(50)
-    time.sleep_ms(int(msec * 0.9))
+    ntf1 = waitForNotification(int(msec * 0.9))
     piezo.duty(0)
-    time.sleep_ms(int(msec*0.1))
-    gc.collect()
+    ntf2 = waitForNotification(int(msec*0.1))
+
+    return (ntf1 or ntf2)
+
 
 def find_song(name):
     """ find_song(name)
@@ -81,14 +96,7 @@ def find_song(name):
 
             tune = RTTTL(song)
             for freq, msec in tune.notes():
-                play_tone(freq, msec)
-                ntf = _thread.getnotification()
-                if (ntf == _thread.EXIT or ntf == 666):
-                    piezo.deinit()
-                    time.sleep_ms(500)
-                    #gc.collect()
+                if play_tone(freq, msec):
                     return
-                elif ntf == _thread.SUSPEND:
-                    while _thread.wait() != _thread.RESUME:
-                        pass
+
             piezo.deinit()
