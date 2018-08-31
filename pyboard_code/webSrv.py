@@ -92,12 +92,17 @@ def _httpHandlerAlarm(httpClient, httpResponse):
     #time = str("{0}.{1}.{3} {4}:{5} Uhr".format(data[2], data[1], data[0], data[3], data[4]))
     html ="""\
         <html lang=de>
+
         <head>
           <title>RainbowWarrior Uhr- und Weckzeiteinstellungen</title>
+
           <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
           <link rel="stylesheet" href="bootstrap.min.css">
           <link rel="stylesheet" href="style.css">
         </head>
+
+
+
         <body class="h-100">
           <div class="ground"></div>
           <div class="sky">
@@ -117,12 +122,19 @@ def _httpHandlerAlarm(httpClient, httpResponse):
             <div class="shadow"></div>
           </div>
           <div class="container text-white align-items-center d-flex flex-column h-100 justify-content-end pb-md-5">
-            <div class="row w-100">
+            <div class="sticky-top" id="id3">
+              <a href ="/" class ="btn btn-dark btn-lg" role="button"> Animationen </a>
+              <a href ="/alarm" class ="btn btn-dark btn-lg" role="button" disabled> Alarm </a>
+              <a href ="/led" class ="btn btn-dark btn-lg" role="button"> Farbe auswählen </a>
+            </div>
+            <h1 id="id2">Uhr- und Weckzeit einstellen</h1>
+
+            <p>
+              {0:02.02d}.{1:02.02d}.{2:02.02d} {3:02.02d}:{4:02.02d} Uhr
+            </p>
+            <div class="row w-100" id="id3">
               <div class="col-md-6">
-                <h1>Uhrzeit und Weckzeit einstellen</h1>
-                <p>
-                  {0:02.02d}.{1:02.02d}.{2:02.02d} {3:02.02d}:{4:02.02d} Uhr
-                </p>
+
                 <form method="POST" action="/alarm" id="setTime">
                   <h2 form="setTime">Systemzeit einstellen</h2>
                   <div class="row">
@@ -144,11 +156,12 @@ def _httpHandlerAlarm(httpClient, httpResponse):
                       <label for "alarmTime">Uhrzeit</label>
                       <input class="form-control" type="text" name="alarmTime" id="alarmTime" value="{5:02.02d}:{6:02.02d}">
                     </div>
-                    <div class="col-md-6">
+                    <!--<div class="col-md-6">
                       <label for "alarmTime">Uhrzeit</label>
                       <input type="checkbox" name="dailyAlarm" value="dailyAlarm" checked="checked"> daily Alarm
                       </label>
-                    </div>
+                    </div>-->
+
                   </div>
                   <button class="btn btn-primary" type="submit" name="setAlarm" value="setAlarm">Eingabe absenden</button>
                 </form>
@@ -187,11 +200,13 @@ def _httpHandlerAlarm(httpClient, httpResponse):
                   <button class="btn btn-primary" type="submit" name="setSongButton" value="setSong">Song w&aumlhlen</button>
                   <!--<button class="btn btn-primary" type="submit" name="playSongButton" value="playSong">Wecksound w&auml;hlen</button>
                   -->
+
                 </form>
               </div>
             </div>
         </body>
         </html>
+
     """.format(date[2], date[1], date[0], date[3], date[4], alarmTime[0], alarmTime[1])#.format(0, 1, 2, 3,4, 5)#
     #_thread.notify(0, _thread.SUSPEND)
     httpResponse.WriteResponseOk(   headers         = ({'Cache-Control': 'no-cache'}),

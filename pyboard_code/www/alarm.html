@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="style.css">
 </head>
 
+
+
 <body class="h-100">
   <div class="ground"></div>
   <div class="sky">
@@ -27,13 +29,19 @@
     <div class="shadow"></div>
   </div>
   <div class="container text-white align-items-center d-flex flex-column h-100 justify-content-end pb-md-5">
-    <div class="row w-100">
-      <div class="col-md-6">
-        <h1>Uhrzeit und Weckzeit einstellen</h1>
+    <div class="sticky-top" id="id3">
+      <a href ="/" class ="btn btn-dark btn-lg" role="button"> Animationen </a>
+      <a href ="/alarm" class ="btn btn-dark btn-lg" role="button" disabled> Alarm </a>
+      <a href ="/led" class ="btn btn-dark btn-lg" role="button"> Farbe auswählen </a>
+    </div>
+    <h1 id="id2">Uhr- und Weckzeit einstellen</h1>
 
-        <p>
-          {0:02.02d}.{1:02.02d}.{2:02.02d} {3:02.02d}:{4:02.02d} Uhr
-        </p>
+    <p>
+      {0:02.02d}.{1:02.02d}.{2:02.02d} {3:02.02d}:{4:02.02d} Uhr
+    </p>
+    <div class="row w-100" id="id3">
+      <div class="col-md-6">
+
         <form method="POST" action="/alarm" id="setTime">
           <h2 form="setTime">Systemzeit einstellen</h2>
           <div class="row">
@@ -105,4 +113,3 @@
     </div>
 </body>
 </html>
-
