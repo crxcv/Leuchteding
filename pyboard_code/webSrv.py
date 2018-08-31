@@ -125,7 +125,7 @@ def _httpHandlerAlarm(httpClient, httpResponse):
     <div class="sticky-top" id="id3">
       <a href ="/" class ="btn btn-dark btn-lg" role="button"> Animationen </a>
       <a href ="/alarm" class ="btn btn-dark btn-lg" role="button" disabled> Alarm </a>
-      <a href ="/led" class ="btn btn-dark btn-lg" role="button"> Farbe auswählen </a>
+      <a href ="/led" class ="btn btn-dark btn-lg" role="button"> Farbe ausw&auml;hlen </a>
     </div>
     <h1 id="id1">RaibowWarrior</h1>
     <h2 id="id3">Uhr- und Weckzeit einstellen</h2>
