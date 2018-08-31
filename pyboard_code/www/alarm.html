@@ -34,12 +34,13 @@
       <a href ="/alarm" class ="btn btn-dark btn-lg" role="button" disabled> Alarm </a>
       <a href ="/led" class ="btn btn-dark btn-lg" role="button"> Farbe auswählen </a>
     </div>
-    <h1 id="id2">Uhr- und Weckzeit einstellen</h1>
+    <h1 id="id1">RaibowWarrior</h1>
+    <h2 id="id3">Uhr- und Weckzeit einstellen</h2>
 
     <p>
       {0:02.02d}.{1:02.02d}.{2:02.02d} {3:02.02d}:{4:02.02d} Uhr
     </p>
-    <div class="row w-100" id="id3">
+    <div class="row w-100" id="id1">
       <div class="col-md-6">
 
         <form method="POST" action="/alarm" id="setTime">
@@ -54,7 +55,7 @@
               <input class="form-control" type="text" name="time" id="time" value="{3:02.02d}:{4:02.02d}">
             </div>
           </div>
-          <button class="btn btn-primary" type="submit">absenden</button>
+          <button class="btn btn-dark" type="submit">absenden</button>
         </form>
         <form method="POST" action="/alarm" id="setAlarm">
           <h2 form="setAlarm">Weckzeit einstellen</h2>
@@ -70,7 +71,7 @@
             </div>-->
 
           </div>
-          <button class="btn btn-primary" type="submit" name="setAlarm" value="setAlarm">Eingabe absenden</button>
+          <button class="btn btn-dark" type="submit" name="setAlarm" value="setAlarm">Eingabe absenden</button>
         </form>
       </div>
       <div class="col-md-6">
@@ -104,8 +105,8 @@
           <input type="radio" id="Tetris" name="setSound" value="Tetris">
           <label for="Tetris"> Tetris Theme</label>
           </br>
-          <button class="btn btn-primary" type="submit" name="setSongButton" value="setSong">Song w&aumlhlen</button>
-          <!--<button class="btn btn-primary" type="submit" name="playSongButton" value="playSong">Wecksound w&auml;hlen</button>
+          <button class="btn btn-dark" type="submit" name="setSongButton" value="setSong">Song w&aumlhlen</button>
+          <!--<button class="btn btn-dark" type="submit" name="playSongButton" value="playSong">Wecksound w&auml;hlen</button>
           -->
 
         </form>

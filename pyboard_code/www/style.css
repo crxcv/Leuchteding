@@ -2,7 +2,7 @@ body {
   /* Standard syntax (must be last) */
 }
 .rainbow-preloader .rainbow-stripe:nth-child(1) {
-  border-color: #f15a5ab4;
+  border-color: #f15a5a;
   clip: rect(0, 84px, 42px, 0);
   height: 60px;
   left: 48px;
@@ -20,7 +20,7 @@ body {
 }
 
 .rainbow-preloader .rainbow-stripe:nth-child(2) {
-  border-color: #f0c419b4;
+  border-color: #f0c419;
   clip: rect(0, 108px, 54px, 0);
   height: 84px;
   left: 36px;
@@ -38,7 +38,7 @@ body {
 }
 
 .rainbow-preloader .rainbow-stripe:nth-child(3) {
-  border-color: #4eba6fb4;
+  border-color: #4eba6f;
   clip: rect(0, 132px, 66px, 0);
   height: 108px;
   left: 24px;
@@ -56,7 +56,7 @@ body {
 }
 
 .rainbow-preloader .rainbow-stripe:nth-child(4) {
-  border-color: #2d95bfb4;
+  border-color: #2d95bf;
   clip: rect(0, 156px, 78px, 0);
   height: 132px;
   left: 12px;
@@ -74,7 +74,7 @@ body {
 }
 
 .rainbow-preloader .rainbow-stripe:nth-child(5) {
-  border-color: #955ba5b4;
+  border-color: #955ba5;
   clip: rect(0, 180px, 90px, 0);
   height: 156px;
   left: 0px;
@@ -95,7 +95,7 @@ body {
   height: 90px;
   left: 50%;
   margin-left: -90px;
-  margin-top: -90px;
+  margin-top: -128px;
   overflow: hidden;
   position: absolute;
   top: 50%;
@@ -156,7 +156,8 @@ h1 {
 
 .sky {
   z-index: -1;
-  background: linear-gradient(#579cf2 20%, #9bcef2 100%);/*(#85a5cc 0, #d0e4f2 100%)*/
+  /*background: linear-gradient(#579cf2 20%, #9bcef2 100%);*//*(#85a5cc 0, #d0e4f2 100%)*/
+  background: linear-gradient(#0f396d 20%, #11639e 100%);/*(#85a5cc 0, #d0e4f2 100%)*/
   box-shadow: 0 0 20px #d0e4f2;
   height: 44%;
   size: cover;
@@ -227,7 +228,9 @@ position: absolute;
 */
 .ground {
   z-index: -1;
-  background: linear-gradient(#6e9e03 0, #4f7302 100%);
+  /*background: linear-gradient(#6e9e03 0, #4f7302 100%);*/
+  background: linear-gradient(#086609 0, #073a13 100%);
+
   height: 57%;
   size: cover;
   /*overflow: hidden;*/
