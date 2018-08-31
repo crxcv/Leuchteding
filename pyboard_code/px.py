@@ -2,12 +2,12 @@ import  machine, math, random, gc
 import _thread
 from utime import sleep_ms
 led_pin = 14
-num_led = 39#1i2
+num_led = 12#1i2
 strip = machine.Neopixel(pin=machine.Pin(led_pin, machine.Pin.OUT), pixels=num_led, type=1)
 strip.color_order("RGBW")
 
-brightness = 255
-strip.brightness(255, update=True)
+brightness = 128
+strip.brightness(brightness, update=True)
 
 # for bezier_gradient
 fact_cache = {}
@@ -336,7 +336,7 @@ def fadeToBlack(ledNo, fadeValue):
     # gc.collect()
 
 #0xff,0xff,0xff,7, 255, True, 0.00030
-def meteorRain(red=0xff, green=0xff, blue=0xff, meteorSize = 7, meteorTrailDecay = 255, meteorRandomDecay = True, speedDelay = 30):
+def meteorRain(red=0xff, green=0xff, blue=0xff, meteorSize = 7, meteorTrailDecay = 255, meteorRandomDecay = True, speedDelay = 100):
     global brightness
     print("meteorRain")
     setAll(0x00, 0x00, 0x00, 0xFF)
@@ -363,7 +363,6 @@ def meteorRain(red=0xff, green=0xff, blue=0xff, meteorSize = 7, meteorTrailDecay
 #-------------------sparkle----------------------------------
 def sparkle():
     print("sparkle")
-    speed = 1000
 
     #for l in range(20):
     while True:
@@ -378,7 +377,6 @@ def sparkle():
             else:
                 strip.set(i, 0x00, update = False)
         strip.show()
-        #sleep_ms(200)
         if waitForNotification(200):
             return
         strip.clear
@@ -416,7 +414,6 @@ def wave():
         # gc.collect()
         if waitForNotification(1000):
             return
-        #sleep_ms(1000)
 #-----------------end of wave-------------------------
 
 #------------------ripple-----------------------------
@@ -466,8 +463,6 @@ def ripple():
             else:
                 step = -1
         strip.show()
-        # gc.collect()
-        #sleep_ms(100)
         if waitForNotification(100):
             return
 #------------------end of ripple--------------------------

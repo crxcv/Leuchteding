@@ -42,7 +42,7 @@ def _httpHandlerLEDPost(httpClient, httpResponse):
         blue= colors.get('blue')
         rgb = tuple((red, green, blue))
         print("rgb {}".format(rgb))
-        _thread.sendmsg(_thread.getReplID(), "colors:{}".format(rgb))
+        _thread.sendmsg(_thread.getReplID(), "colors: {}".format(rgb))
     _thread.notify(0, _thread.SUSPEND)
     httpResponse.WriteResponseFile(filepath = 'www/led.html', contentType= "text/html", headers = None)
 
@@ -50,9 +50,7 @@ def _httpHandlerLEDPost(httpClient, httpResponse):
 @MicroWebSrv.route('/alarm')
 @MicroWebSrv.route('/alarm', 'POST')
 def _httpHandlerAlarm(httpClient, httpResponse):
-    # send notification value to all threads so they can abort
-    # 0 as 1st argument means that notification goes to every thread
-    _thread.notify(0, 666)
+
 
     global date
     global alarmTime
@@ -61,15 +59,11 @@ def _httpHandlerAlarm(httpClient, httpResponse):
     print(formData)
     date = utime.localtime()
     if formData:
+        # send notification value to all threads so they can abort
+        # 0 as 1st argument means that notification goes to every thread
+        _thread.notify(0, 666)
 
         if "time" in formData:
-            #string formatting:
-            # >>> '%0.2d' %(3)
-            #'03'
-            #>>> '%0.2d' %(10)
-            #'10'
-            #newDate=formData["date"])
-
             day =   int(formData["date"].split('.')[0])
             month = int(formData["date"].split('.')[1])
             year =  int(formData["date"].split('.')[2])
