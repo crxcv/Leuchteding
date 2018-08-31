@@ -16,6 +16,8 @@ ms_to_alarm = 0
 #gets true if new AlarmTime was set, to print seconds to is_alarm_running in terminal
 count_time = False
 
+wait_before_start_thread = 3000
+wait_after_stop_thread = 500
 #TODO: use constants for light_val
 last_light_val = 0
 alarm_light_val = 3
@@ -46,13 +48,12 @@ px.set_brightness(ldr_val)
 _thread.replAcceptMsg(True)
 
 #blink once at startup to signalize that device has started and turn off all led
-_thread.stack_size(10*1024)
+_thread.stack_size(8*1024)
 lightAnim_thread= _thread.start_new_thread("lightThread", px.thread, (3,))
 
 #connect to wifi or create access point
 connectSTA_AP.connect()
 
-#utime.sleep_ms(200)
 #create realTimeClock instance and synchronize with online clock if possible
 clock= machine.RTC()
 date = clock.now()
@@ -81,20 +82,23 @@ def handleLightThread(val):
     '''stops current running light animation and starts new one with given value
     '''
     global lightAnim_thread
-    print("handleLightThread")
+    #print("handleLightThread")
 
     # terminate thread if it is running
-    if _thread.status(lightAnim_thread) != _thread.TERMINATED:
-        #utime.sleep_ms(500)
+    if  _thread.status(lightAnim_thread) != _thread.TERMINATED:
         print("stopping lightThread")
         _thread.notify(lightAnim_thread, _thread.EXIT)
-        utime.sleep_ms(500)
+        _thread.wait(wait_after_stop_thread)
+    #lightAnim_thread = 0
+    #_thread.wait(100)
+    else:
+        px.off()
 
     #if lights should be turned off, return. turning off is done by thread.EXIT
     if val is 0:
         return
 
-    _thread.wait(2000)
+    _thread.wait(wait_before_start_thread)
     _thread.stack_size(8*1024)
     lightAnim_thread = _thread.start_new_thread("lightThread", px.thread, (val,))
     #utime.sleep_ms(1000)
@@ -106,9 +110,9 @@ def handleMusicThread(val):
     if _thread.status(music_thread) != _thread.TERMINATED:
         print("stopping musicThread")
         _thread.notify(music_thread, _thread.EXIT)
-        utime.sleep_ms(500)
+        utime.sleep_ms(wait_after_stop_thread)
 
-    _thread.wait(2000)
+    _thread.wait(wait_before_start_thread)
     music_thread = _thread.start_new_thread("musicThread", songs.find_song, (val,))
     #utime.sleep_ms(500)
 
@@ -234,15 +238,12 @@ while True:
                 light_val = 1
             elif "Off" in values[1]:
                 light_val = 0
-            #utime.sleep_ms(2000)
 
         #check if a new song was set on website, gets "None" if not
         elif values[0] is "song":
             alarm_song = values[1]
             print("song set to: {}".format(alarm_song))
-            #utime.sleep_ms(3000)
             handleMusicThread(alarm_song)
-            #utime.sleep_ms(2000)
 
         #check if systemTime was set on website
         elif values[0] is "time":
@@ -257,12 +258,10 @@ while True:
         #check if LED colors were set on website
         elif values[0] is "colors":
             led_color = tuple(map(int, values[1][1:-1].split(',')))
-            print("new color from srv: {}".format(led_color))
+            #print("new color from srv: {}".format(led_color))
+            _thread.wait(300)
             px.setAll(led_color[0], led_color[1], led_color[2], 255)
-            #utime.sleep_ms(500)
 
-        #utime.sleep for more than one second is important, else system will crash
-        #utime.sleep_ms(3000)
 
     #check if light_val has changed to know if new lightAnim should be started
     if light_val is not last_light_val:
@@ -284,6 +283,7 @@ while True:
     # read light resistor once per minute and set brightness of led according to value
     curr_ms = utime.ticks_ms()
     if utime.ticks_diff(utime.ticks_ms(), last_ms_ldr) >= (1000 * 60):#())
+        last_ms_ldr = curr_ms
         ldr_val = ldr.read()
         px.set_brightness(ldr_val)
 

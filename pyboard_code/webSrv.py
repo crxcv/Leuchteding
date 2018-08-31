@@ -21,7 +21,7 @@ def _httpHandlerPost(httpClient, httpResponse) :
         if "light" in formData:
             _thread.sendmsg(_thread.getReplID(), "light:{}".format(formData["light"]))
 
-    _thread.notify(0, _thread.SUSPEND)
+    #_thread.notify(0, _thread.SUSPEND)
     #_thread.wait()
     httpResponse.WriteResponseFile(filepath = 'www/index.html', contentType= "text/html", headers = None)
     #_thread.notify(0, _thread.RESUME)
@@ -43,7 +43,7 @@ def _httpHandlerLEDPost(httpClient, httpResponse):
         rgb = tuple((red, green, blue))
         print("rgb {}".format(rgb))
         _thread.sendmsg(_thread.getReplID(), "colors: {}".format(rgb))
-    _thread.notify(0, _thread.SUSPEND)
+    #_thread.notify(0, _thread.SUSPEND)
     httpResponse.WriteResponseFile(filepath = 'www/led.html', contentType= "text/html", headers = None)
 
 
@@ -193,12 +193,12 @@ def _httpHandlerAlarm(httpClient, httpResponse):
         </body>
         </html>
     """.format(date[2], date[1], date[0], date[3], date[4], alarmTime[0], alarmTime[1])#.format(0, 1, 2, 3,4, 5)#
-    _thread.notify(0, _thread.SUSPEND)
+    #_thread.notify(0, _thread.SUSPEND)
     httpResponse.WriteResponseOk(   headers         = ({'Cache-Control': 'no-cache'}),
                                     contentType     = 'text/html',
                                     contentCharset  = 'UTF-8',
                                     content =html)
-    _thread.notify(0, _thread.RESUME)
+    #_thread.notify(0, _thread.RESUME)
 
 def start():
     '''

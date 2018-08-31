@@ -2,7 +2,7 @@ import  machine, math, random, gc
 import _thread
 from utime import sleep_ms
 led_pin = 14
-num_led = 12#1i2
+num_led = 11#14
 strip = machine.Neopixel(pin=machine.Pin(led_pin, machine.Pin.OUT), pixels=num_led, type=1)
 strip.color_order("RGBW")
 
@@ -13,7 +13,6 @@ strip.brightness(brightness, update=True)
 fact_cache = {}
 threecolors = {"0xff0000", "0x00ff00", "0x00ffff"}
 
-lightAnim_thread = 0
 _thread.allowsuspend(True)
 
 #for fire animation
@@ -26,8 +25,8 @@ def waitForNotification(timeout = 20):
     if (ntf == _thread.EXIT or ntf == 666):
         print("exiting lightThread. Notification: {}".format(ntf))
         strip.clear()
-        # gc.collect()
         return True
+
     elif ntf == _thread.SUSPEND:
         print("light suspended")
         _thread.wait(2000)
@@ -79,7 +78,7 @@ def RGB_to_hex(RGBin):
     return int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGBin]))
 # ---------- end conv. values ------------------
 
-def setAll(red, green, blue, brightness, wait = 20):
+def setAll(red, green, blue, brightness, wait = 0):
     """setAll(red, green, blue, brightness, wait=0.0)
     sets all pixels in color defined by red, green, blue"""
     RGB =[str(red), str(green), str(blue)] #[int(red, 16), int(green, 16), int(blue, 16)]
@@ -100,8 +99,10 @@ def star():
             else:
                 strip.set(num, 0x00, update = False)
         strip.show()
-        sleep_ms(200)
-        off()
+        if waitForNotification(200):
+            # off()
+            return
+        strip.clear()
         #sleep_ms(100)
         n+=1
 
@@ -151,7 +152,8 @@ def rainbowCycle(wait=500):
 
     print("rainbowCycle")
 
-    for j in range (256): #5 cycles of all colors on wheel
+    #for j in range (256): #1 cycles of all colors on wheel
+    while True:
         #set all pixel in rainbow colors
         for i in range (0, num_led):
             val = Wheel((int(i * 256 / num_led)+j ) & 255 )
@@ -161,12 +163,11 @@ def rainbowCycle(wait=500):
             strip.set(i, colInt, update=False)
 
         strip.show()
-        # gc.collect()
 
-        #check if thread got notificatio to exit and exit if it is so
+        # wait for (wait) ms & check if thread got notificatio to exit. exit if it is so
         if waitForNotification(wait):
+            # off()
             return
-        #sleep_ms(wait)
 
     print("all cycles done")
 
@@ -205,6 +206,12 @@ def bezier_gradient(colors=None, n_out=None):
         points. Dictionary also contains control
         colors/points. '''
 
+    if colors is None:
+        colors=threecolors
+    if n_out is None:
+        n_out = num_led
+
+
     print("gradient")
     def bezier_interp( t):
         ''' Define an interpolation function
@@ -221,13 +228,9 @@ def bezier_gradient(colors=None, n_out=None):
             for c in range(3):
                 out[c] += vector[c]
 
-        return int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in out]))
-
-
-    if colors is None:
-        colors=threecolors
-    if n_out is None:
-        n_out = num_led
+        #return int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in out]))
+        hex_out = RGB_to_hex(out)
+        return hex_out
 
     # RGB vectors for each color, use as control points
     RGB_list = [hex_to_RGB(color) for color in colors]
@@ -236,15 +239,12 @@ def bezier_gradient(colors=None, n_out=None):
         bezier_interp(float(t)/(n_out-1))
         for t in range(n_out)
     ]
-    # gc.collect()
+        # gc.collect()
     for n in range(len(gradient)):
         strip.set(n,  gradient[n], update=False)
         #strip.set((num_led-n), gradient[n], update=False)
     strip.show()
 
-    #{"#00173d", "#f75002", "#01f2f7"}
-    #for col in colors:
-    #strip.show()
     # Return all points requested for gradient
     #return {
         #"gradient": color_dict(gradient),
@@ -253,7 +253,7 @@ def bezier_gradient(colors=None, n_out=None):
 # ---------- end of bezier_gradient-------------
 
 # ------------ fire -------------------- (55, 120, 15)-orig. (70,140,20)-custom
-def fire(cooling = 70, sparkling = 140, speedDelay = 15):
+def fire(cooling = 70, sparkling = 140, speedDelay = 100):
     #w, h = 3, num_led
 
     print("fire")
@@ -290,6 +290,7 @@ def fire(cooling = 70, sparkling = 140, speedDelay = 15):
         strip.show()
         #check if thread got notificatio to exit and exit if it is so
         if waitForNotification(speedDelay):
+            # off()
             return
         #sleep_ms(speedDelay)
         # gc.collect()
@@ -357,6 +358,7 @@ def meteorRain(red=0xff, green=0xff, blue=0xff, meteorSize = 7, meteorTrailDecay
             #sleep_ms(speedDelay)
             #check if thread got notificatio to exit and exit if it is so
             if waitForNotification(speedDelay):
+                # off()
                 return
 # ------------------ meteor end ----------------------------------
 
@@ -378,6 +380,7 @@ def sparkle():
                 strip.set(i, 0x00, update = False)
         strip.show()
         if waitForNotification(200):
+            # off()
             return
         strip.clear
         # gc.collect()
@@ -413,6 +416,7 @@ def wave():
         frame += 1000
         # gc.collect()
         if waitForNotification(1000):
+            # off()
             return
 #-----------------end of wave-------------------------
 
@@ -464,6 +468,7 @@ def ripple():
                 step = -1
         strip.show()
         if waitForNotification(100):
+            #off()
             return
 #------------------end of ripple--------------------------
 
@@ -471,9 +476,8 @@ def ripple():
 def off():
     """off()
     turns off all pixels"""
-    #print("off")
+    print("off")
     strip.set(0, 0x00, num=num_led)
-    # gc.collect()
 
 
 
