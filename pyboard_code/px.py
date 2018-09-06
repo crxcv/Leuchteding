@@ -2,7 +2,7 @@ import  machine, math, random, gc
 import _thread
 from utime import sleep_ms
 led_pin = 14
-num_led = 11#14
+num_led = 15
 strip = machine.Neopixel(pin=machine.Pin(led_pin, machine.Pin.OUT), pixels=num_led, type=1)
 strip.color_order("RGBW")
 
@@ -432,6 +432,29 @@ def ripple():
             #off()
             return
 #------------------end of ripple--------------------------
+
+#-------------------sparkle----------------------------------
+def sparkle():
+    print("sparkle")
+
+    #for l in range(20):
+    while True:
+        for i in range(1, num_led+1):
+            val = Wheel(random.randint(0,255))
+            RGB = []
+            RGB = [int(x) for x in val]
+            color = int("0x"+"".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in RGB]))
+            # gc.collect()
+            if random.randint(0,10)<4:
+                strip.set(i, color, update=False)
+            else:
+                strip.set(i, 0x00, update = False)
+        strip.show()
+        if waitForNotification(200):
+            # off()
+            return
+        strip.clear
+#---------------------end of sparkle-------------------------
 
 
 #turn off all pixels

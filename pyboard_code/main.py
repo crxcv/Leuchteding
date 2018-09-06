@@ -31,7 +31,7 @@ music_thread = 0
 
 # touch pins: 4, 0, 2, 15, 13, 12, 14, 27, 33, 32
 # value error on 0, 2. 4: 50%
-touchPin = 4
+touchPin = 27
 ldr_pin = 36 #SVP Pin
 
 ldr_val = 0
@@ -64,6 +64,7 @@ def readTouchPin():
     try:
         touchv = touch.read()
     except ValueError:
+        handleMusicThread("Fail")
         print("TouchPad read error")
     return touchv
 
@@ -184,9 +185,9 @@ while True:
     touchval = readTouchPin()
     # TODO: this one makes no sense:
     #read the touch sensor and check if it was touched
-    touchLightRatio = touchval / touchThreshold
-    if .35 < touchLightRatio < .6:
-        print("touched! touchLightRatio: {}".format(touchLightRatio))
+    #touchLightRatio = touchval / touchThreshold
+    if touchval < 100:
+        print("touched! touchLightRatio: {}".format(touchval))
 
         #if is_alarm_running is set to True it means is_alarm_running is currently running
         #touchSensor disables is_alarm_running
@@ -212,7 +213,7 @@ while True:
         if values[0] is "light":
         # if light is not "None":
             print("light changed by webserver: {}".format(values[1]))
-            elif "Ripple" in values[1]:
+            if "Ripple" in values[1]:
                 light_val = 8
             elif "Wave" in values[1]:
                 light_val = 7
@@ -272,6 +273,7 @@ while True:
         if count_time:
             print("{} seconds to alarm".format(int(ms_to_alarm/1000)))
             ms_to_alarm = ms_to_alarm -1000
+
 
     # read light resistor once per minute and set brightness of led according to value
     curr_ms = utime.ticks_ms()
