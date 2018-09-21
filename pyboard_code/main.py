@@ -1,7 +1,7 @@
-import machine, _thread, gc, utime
+animationsimport machine, _thread, gc, utime
 
 #gc.enable()
-import connectSTA_AP, songs, px
+import connectSTA_AP, songs, animations
 import webSrv as srv
 
 # gets True when alarm is running, so the touch sensor will stop alarm instead of toggeling animations
@@ -41,7 +41,7 @@ last_ldr_val = 0
 #light resistor configuration
 ldr = machine.ADC(machine.Pin(ldr_pin, machine.Pin.IN)) #SVP-Pin
 ldr_val = ldr.read()
-px.set_brightness(ldr_val)
+animations.set_brightness(ldr_val)
 
 
 #set to true to be able to get messages
@@ -49,7 +49,7 @@ _thread.replAcceptMsg(True)
 
 #blink once at startup to signalize that device has started and turn off all led
 _thread.stack_size(8*1024)
-lightAnim_thread= _thread.start_new_thread("lightThread", px.thread, (3,))
+lightAnim_thread= _thread.start_new_thread("lightThread", animations.thread, (3,))
 
 #connect to wifi or create access point
 connectSTA_AP.connect()
@@ -92,7 +92,7 @@ def handleLightThread(val):
         _thread.wait(wait_after_stop_thread)
 
     else:
-        px.off()
+        animations.off()
 
     #if lights should be turned off, return. turning off is done by thread.EXIT
     if val is 0:
@@ -100,7 +100,7 @@ def handleLightThread(val):
 
     _thread.wait(wait_before_start_thread)
     _thread.stack_size(8*1024)
-    lightAnim_thread = _thread.start_new_thread("lightThread", px.thread, (val,))
+    lightAnim_thread = _thread.start_new_thread("lightThread", animations.thread, (val,))
 
 def handleMusicThread(val):
     '''stops current musicThread if runing and starts a new one with given value
@@ -179,7 +179,7 @@ def setAlarmTime(h, m):
 
 #start server in thread
 srv_thread = srv.start()
-px.blink(1)
+animations.blink(1)
 
 while True:
     touchval = readTouchPin()
@@ -254,7 +254,7 @@ while True:
             led_color = tuple(map(int, values[1][1:-1].split(',')))
             #print("new color from srv: {}".format(led_color))
             _thread.wait(300)
-            px.setAll(led_color[0], led_color[1], led_color[2], 255)
+            animations.setAll(led_color[0], led_color[1], led_color[2], 255)
 
 
     #check if light_val has changed to know if new lightAnim should be started
@@ -280,17 +280,17 @@ while True:
     if utime.ticks_diff(utime.ticks_ms(), last_ms_ldr) >= (1000 * 60):
         last_ms_ldr = curr_ms
         ldr_val = ldr.read()
-        px.set_brightness(ldr_val)
+        animations.set_brightness(ldr_val)
 
     # if is_alarm_running is running let the LEDs blink twice per second
     if is_alarm_running:
         curr_ms = utime.ticks_ms
         if utime.ticks_diff(utime.ticks_ms(), last_ms_alarm) >500:
             if is_light_on:
-                px.off()
+                animations.off()
                 is_light_on = False
             else:
-                px.setAll(led_color[0], led_color[1], led_color[2], 255)
+                animations.setAll(led_color[0], led_color[1], led_color[2], 255)
                 is_light_on = True
             last_ms_alarm = utime.ticks_ms()
         if _thread.status(music_thread) == _thread.TERMINATED:
