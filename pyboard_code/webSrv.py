@@ -42,7 +42,7 @@ def _httpHandlerLEDPost(httpClient, httpResponse):
         blue= colors.get('blue')
         rgb = tuple((red, green, blue))
         print("rgb {}".format(rgb))
-        _thread.sendmsg(_thread.getReplID(), "colors:{}".format(rgb))
+        _thread.sendmsg(_thread.getReplID(), "colors: {}".format(rgb))
     #_thread.notify(0, _thread.SUSPEND)
     httpResponse.WriteResponseFile(filepath = 'www/led.html', contentType= "text/html", headers = None)
 

@@ -18,20 +18,28 @@ def connect():
 
     # activate station mode and connect to the local accesspoint
     sta_if.active(True)
-    sta_if.connect(STA_SSID, STA_PSK)
 
-    #try to connect to the router for a while. if no connection was established abort
-    timeout = 50
-    while not sta_if.isconnected():
-        utime.sleep_ms(100)
-        timeout -= 1
-        if timeout == 0:
-            break
+    #scan for networks. returns tuple: (ssid, bssid, primary_chan, rssi, auth_mode, auth_mode_string, hidden)
+    networks = sta_if.scan()
+    if networks[0] == STA_SSID:
+        sta_if.connect(STA_SSID, STA_PSK)
+        #try to connect to the router for a while. if no connection was established abort
+        timeout = 50
+        while not sta_if.isconnected():
+            utime.sleep_ms(100)
+            timeout -= 1
+            if timeout == 0:
+                break
 
-    #if connection was established print configurations
-    if sta_if.isconnected():
-        print("======= STA connected ========")
-        print(sta_if.ifconfig())
+        #if connection was established print configurations
+        if sta_if.isconnected():
+            print("======= STA connected ========")
+            print(sta_if.ifconfig())
+
+    else:
+        #if ssid is not available deactivate station mode
+        sta_if.active(False)
+
 
     #create accesspoint with given credentials
     print("creating accesspoint")
