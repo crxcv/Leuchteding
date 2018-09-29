@@ -1,4 +1,4 @@
-animationsimport machine, _thread, gc, utime
+import machine, _thread, gc, utime
 
 #gc.enable()
 import connectSTA_AP, songs, animations
@@ -79,28 +79,23 @@ touchThreshold = readTouchPin() #touch.read()#sum(thresholdLight)//len(threshold
 #     global touchThreshold
 #     light_val = light_val +1
 
-def handleLightThread(val):
+
+def handleAnimations(animation_name=None):
     '''stops current running light animation and starts new one with given value
     '''
-    global lightAnim_thread
-    #print("handleLightThread")
+    try:
+        if _thread.status(animation_thread) != _thread.TERMINATED:
+            _thread.notify(animation_thread, _thread.EXIT)
+    except NameError:
+        pass
 
-    # terminate thread if it is running
-    if  _thread.status(lightAnim_thread) != _thread.TERMINATED:
-        print("stopping lightThread")
-        _thread.notify(lightAnim_thread, _thread.EXIT)
-        _thread.wait(wait_after_stop_thread)
-
+    if animation_name == None:
+        utime.sleep_ms(50)
+        animation_thread = _thread.start_new_thread("animation", animations.next, () )
     else:
-        animations.off()
-
-    #if lights should be turned off, return. turning off is done by thread.EXIT
-    if val is 0:
-        return
-
-    _thread.wait(wait_before_start_thread)
-    _thread.stack_size(8*1024)
-    lightAnim_thread = _thread.start_new_thread("lightThread", animations.thread, (val,))
+        print("starting animation {}".format(animation_name))
+        utime.sleep_ms(wait_before_start_thread)
+        animation_thread = _thread.start_new_thread("animation", animations.start, (animation_name,))
 
 def handleMusicThread(val):
     '''stops current musicThread if runing and starts a new one with given value
@@ -202,8 +197,8 @@ while True:
         # if no alarm is currently running,
         # increase light_val by one to toggle through lightAnimations
         else:
-            light_val += 1
-            #utime.sleep_ms(100)
+            print("touched!! value: {}".format(touch_val))
+            handleAnimations()
 
     # check if lightAnim was set on website. returns "None" if none was set
     # light = srv.getLight()
@@ -213,22 +208,7 @@ while True:
         if values[0] is "light":
         # if light is not "None":
             print("light changed by webserver: {}".format(values[1]))
-            if "Ripple" in values[1]:
-                light_val = 8
-            elif "Wave" in values[1]:
-                light_val = 7
-            elif "MeteorRain" in values[1]:
-                light_val = 6
-            elif "RainbowCycle" in values[1]:
-                light_val = 5
-            elif "ColorGradient" in values[1]:
-                light_val = 4
-            elif "Fire" in values[1]:
-                light_val = 2
-            elif "Rainbow" in values[1]:
-                light_val = 1
-            elif "Off" in values[1]:
-                light_val = 0
+            handleAnimations(animation_name = values[1])
 
         #check if a new song was set on website, gets "None" if not
         elif values[0] is "song":

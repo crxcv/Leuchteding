@@ -1,9 +1,9 @@
 import  machine, math, random, gc
 import _thread
 from utime import sleep_ms
-led_pin = 14
+led_pin = machine.Pin(14, machine.Pin.OUT)
 num_led = 15
-strip = machine.Neopixel(pin=machine.Pin(led_pin, machine.Pin.OUT), pixels=num_led, type=1)
+strip = machine.Neopixel(pin=led_pin, pixels=num_led, type=1)
 strip.color_order("RGBW")
 
 brightness = 128
@@ -40,7 +40,7 @@ def set_brightness(ldrVal):
     ldrVal: value read by ldr sensor
     """
     global brightness
-    brightness = ldrVal/1050 * 255
+    brightness = ldrVal/1100 * 255
     strip.brightness(int(brightness), update=True)
 
 
@@ -456,6 +456,32 @@ def sparkle():
         strip.clear
 #---------------------end of sparkle-------------------------
 
+def running_dot(color = 0x00FFFF, time_on=50):
+    while True:
+        for i in range(1, num_led+1):
+            pos1 = (i-1) % num_led +1
+            pos2 = (i-2) % num_led +1
+            pos3 = (i-3) % num_led +1
+
+            if pos1  == 0:
+                pos1 = num_led
+            if pos2 == 0:
+                pos2 = num_led
+            if pos3 == 0:
+                pos3 = num_led
+
+            strip.set(i, color, update=False)
+            strip.set(pos1, color, white=100, update=False)
+            strip.set(pos2, color, white=150, update=False)
+            strip.set(pos3, color, white=200, update=False)
+            strip.show()
+            utime.sleep_ms(time_on)
+            strip.set(i, 0x00, update=False)
+            strip.set(pos1, 0x00, update=False)
+            strip.set(pos2, 0x00, update=False)
+            strip.set(pos3, 0x00, update=False)
+            strip.show()
+            utime.sleep_ms(1)
 
 #turn off all pixels
 def off():
@@ -467,32 +493,16 @@ def off():
 
 
 #def thread(val, threadID):
-def thread(val):
-    val = val % 9
-    print("started thread {}".format(val))
-    # gc.collect()
-    before = gc.mem_free()
+animation_dict = {"Off": off, "running_dots":running_dot, "Ripple": ripple, "Wave": wave, "MeteorRain":meteorRain, "RainbowCycle":rainbowCycle, "ColorGradient":bezier_gradient, "blink":blink, "Fire":fire, "Rainbow":rainbow}
+anim_iterator = iter(animation_dict.items())
+def next():
+    global anim_iterator
+    try:
+        running_function = anim_iterator.__next__()[1]
+        print(running_function)
+        running_function()
+    except StopIteration:
+        anim_iterator = iter(animation_dict.items())
 
-    if val is 8:
-        ripple()
-    if val is 7:
-        wave()
-    if val is 6:
-        meteorRain()
-    if val is 5:
-        rainbowCycle()
-    elif val is 4:
-        bezier_gradient()
-    elif val is 3:
-        blink()
-    elif val is 2:
-        fire()
-    elif val is 1:
-        rainbow()
-    elif val is 0:
-        off()
-    else:
-        setAll(23, 230, 180, 255)
-    after = gc.mem_free()
-    # gc.collect()
-    print("thread takes {} bytes".format(before-after))
+def start(animation_name):
+    animation_dict[animation_name]()
