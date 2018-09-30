@@ -3,82 +3,98 @@
 <head>
   <title>RainbowWarriorSettings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <link rel="stylesheet" href="bootstrap.min.css" >
+  <link rel="stylesheet" href="bootstrap.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
-  <body class="h-100">
-    <div class="ground"></div>
-    <div class="sky">
-      <div class="cloud variant-1"></div>
-      <div class="cloud variant-2"></div>
-      <div class="cloud variant-3"></div>
-      <div class="cloud variant-4"></div>
-      <div class="cloud variant-5"></div>
+
+<body class="h-100">
+  <div class="ground"></div>
+  <div class="sky">
+    <div class="cloud variant-1"></div>
+    <div class="cloud variant-2"></div>
+    <div class="cloud variant-3"></div>
+    <div class="cloud variant-4"></div>
+    <div class="cloud variant-5"></div>
+  </div>
+  <div class="rainbow-preloader">
+    <div class="rainbow-stripe"></div>
+    <div class="rainbow-stripe"></div>
+    <div class="rainbow-stripe"></div>
+    <div class="rainbow-stripe"></div>
+    <div class="rainbow-stripe"></div>
+    <div class="shadow"></div>
+    <div class="shadow"></div>
+  </div>
+  <div class="container text-white align-items-center d-flex flex-column h-100 justify-content-end pb-md-5">
+    <div class="sticky-top" id="id3">
+      <a href ="/" class ="btn btn-dark btn-lg" role="button" disabled> Animationen </a>
+      <a href ="/alarm" class ="btn btn-dark btn-lg" role="button" > Alarm </a>
+      <a href ="/led" class ="btn btn-dark btn-lg" role="button"> Farbe</a>
     </div>
-    <div class="rainbow-preloader">
-      <div class="rainbow-stripe"></div>
-      <div class="rainbow-stripe"></div>
-      <div class="rainbow-stripe"></div>
-      <div class="rainbow-stripe"></div>
-      <div class="rainbow-stripe"></div>
-      <div class="shadow"></div>
-      <div class="shadow"></div>
+    <h1 id="id1">RainbowWarrior</h1>
+    <h2 id="id3"></h2>
+    <div class="mt-3 align-items-center">
+      <p>
+        {0:02.02d}.{1:02.02d}.{2:02.02d} {3:02.02d}:{4:02.02d} Uhr
+      </p>
+
+      <form class="form-inline" method="POST" action="/" role="form">
+        <div class="input-group">
+
+          <label class="sr-only" for="inlineFormInputDate">Datum</label>
+          <input type="text" name="date" class="form-control mb-2" id="inlineFormInputDate" placeholder="{0:02.02d}.{1:02.02d}.{2:02.02d}" name="date">
+
+          <label class="sr-only" for="inlineFormInputTime">Uhrzeit</label>
+          <input type="text" name="time" class="form-control mb-2" id="inlineFormInputTime" placeholder="{3:02.02d}:{4:02.02d}">
+          <div class="input-group-append">
+            <button type="submit" class="btn btn-primary mb-2" name="dateTime">Zeit einstellen</button>
+          </div>
+        </div>
+      </form>
+
+
+      <form class="form-inline" method="POST" action="/" role="form">
+        <div class="input-group">
+
+          <label class="sr-only" for="inlineFormInputTime">Weckzeit</label>
+          <input type="text" name="alarm" class="form-control mb-2" id="inlineFormInputTime" placeholder="{5:02.02d}:{6:02.02d}">
+          <div class="input-group-append">
+            <button type="submit" class="btn btn-primary mb-2" name="dateTime">Weckzeit einstellen</button>
+          </div>
+        </div>
+      </form>
+      </br>
+      </br>
+      <form class="form-group" method="POST" action="/" role="form">
+        <!--  <h3 class="mb-3" id="id1">LED Pattern ausw&auml;hlen:</h3-->
+        <div class="input-group">
+          <select class="custom-select" id="inputGroupSelect04" name="light">
+              <option selected>Animation wählen ...</option>
+              <option value="running_dot">Running Dot</option>
+              <option value="v_shape">V-Shape</option>
+              <option value="crossing_dots">Crossing Dots</option>
+            </select>
+          <div class="input-group-append">
+            <button class="btn btn-dark" type="submit" name="button" value="light">ausw&auml;hlen</button>
+          </div>
+        </div>
+        </br>
+        </br>
+        <!--<h3 class="mb-3" id="id1">Song ausw&auml;hlen:</h3>-->
+        <div class="input-group">
+          <select class="custom-select" id="inputGroupSelect04" name="sound">
+                <option selected>Song auswählen ...</option>
+                <option value="OneMoreT">One More Time</option>
+                <option value="MarioTitle">Super Mario Titelsong</option>
+                <option value="Tetris">Tetris Theme</option>
+              </select>
+          <div class="input-group-append">
+            <button class="btn btn-dark" type="submit" name="button" value="sound">Button</button>
+          </div>
+        </div>
+      </form>
     </div>
-    <div class="container text-white align-items-center d-flex flex-column h-100 justify-content-end pb-md-5">
-      <div class="sticky-top" id="id3">
-        <a href ="/" class ="btn btn-dark btn-lg" role="button" disabled> Animationen </a>
-        <a href ="/alarm" class ="btn btn-dark btn-lg" role="button" > Alarm </a>
-        <a href ="/led" class ="btn btn-dark btn-lg" role="button"> Farbe</a>
-      </div>
-      <h1 id="id1">RainbowWarrior</h1>
-      <h2 id="id3"></h2>
-      <div class="mt-3">
-
-        <form method="POST" action="/">
-          <h3 class="mb-3" id="id1">LED Pattern ausw&auml;hlen:</h3>
-
-          <div class="form-check">
-            <label class="form-check-label"><input class="form-check-input" type="radio" id="light1" name="light" value="RainbowCycle">RainbowCycle</label>
-          </div>
-
-          <div class="form-check">
-            <label class="form-check-label"><input class="form-check-input" type="radio" id="light2" name="light" value="Fire">Fire</label>
-          </div>
-
-          <div class="form-check">
-            <label class="form-check-label"><input class="form-check-input" type="radio" id="light3" name="light" value="MeteorRain">MeteorRain</label>
-          </div>
-
-          <div class="form-check">
-            <label class="form-check-label"><input class="form-check-input" type="radio" id="light5" name="light" value="Ripple">Ripple</label>
-          </div>
-
-          <div class="form-check">
-            <label class="form-check-label"><input class="form-check-input" type="radio" id="light6" name="light" value="Wave">Wave</label>
-          </div>
-
-          <div class="form-check">
-            <label class="form-check-label"><input class="form-check-input" type="radio" id="light7" name="light" value="ColorGradient">ColorGradient</label>
-          </div>
-
-          <div class="form-check">
-            <label class="form-check-label"><input class="form-check-input" type="radio" id="light8" name="light" value="Rainbow">Rainbow</label>
-          </div>
-
-          <div class="form-check">
-            <label class="form-check-label"><input class="form-check-input" type="radio" id="light9" name="light" value="RunningDots">Running Dots</label>
-          </div>
-
-          <div class="form-check">
-            <label class="form-check-label"><input class="form-check-input" type="radio" id="light9" name="light" value="Off">Turn LEDs off</label>
-          </div>
-
-          <div class="my-4">
-            <input class="btn btn-dark" type="submit" name="li" value="Submit color"></b>
-          </div>
-        </form>
-      </div>
-    </div>
-  </body>
+  </div>
+</body>
 
 </html>
