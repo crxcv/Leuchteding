@@ -230,7 +230,7 @@
         <PAGE PAGEXPOS="695.28" PAGEYPOS="47642.06" PAGEWIDTH="595.28" PAGEHEIGHT="841.89" BORDERLEFT="40" BORDERRIGHT="80" BORDERTOP="56.5710253998119" BORDERBOTTOM="113.142050799624" NUM="108" NAM="" MNAM="Seitenzahl rechts" Size="Custom" Orientation="0" LEFT="0" PRESET="1" VerticalGuides="" HorizontalGuides="" AGhorizontalAutoGap="0" AGverticalAutoGap="0" AGhorizontalAutoCount="0" AGverticalAutoCount="0" AGhorizontalAutoRefer="0" AGverticalAutoRefer="0" AGSelection="0 0 0 0" pageEffectDuration="1" pageViewDuration="1" effectType="0" Dm="0" M="0" Di="0"/>
         <PAGE PAGEXPOS="100" PAGEYPOS="48523.95" PAGEWIDTH="595.28" PAGEHEIGHT="841.89" BORDERLEFT="40" BORDERRIGHT="80" BORDERTOP="56.5710253998119" BORDERBOTTOM="113.142050799624" NUM="109" NAM="" MNAM="Seitenzahl links" Size="Custom" Orientation="0" LEFT="0" PRESET="1" VerticalGuides="" HorizontalGuides="" AGhorizontalAutoGap="0" AGverticalAutoGap="0" AGhorizontalAutoCount="0" AGverticalAutoCount="0" AGhorizontalAutoRefer="0" AGverticalAutoRefer="0" AGSelection="0 0 0 0" pageEffectDuration="1" pageViewDuration="1" effectType="0" Dm="0" M="0" Di="0"/>
         <PAGE PAGEXPOS="695.28" PAGEYPOS="48523.95" PAGEWIDTH="595.28" PAGEHEIGHT="841.89" BORDERLEFT="40" BORDERRIGHT="80" BORDERTOP="56.5710253998119" BORDERBOTTOM="113.142050799624" NUM="110" NAM="" MNAM="Seitenzahl rechts" Size="Custom" Orientation="0" LEFT="0" PRESET="1" VerticalGuides="" HorizontalGuides="" AGhorizontalAutoGap="0" AGverticalAutoGap="0" AGhorizontalAutoCount="0" AGverticalAutoCount="0" AGhorizontalAutoRefer="0" AGverticalAutoRefer="0" AGSelection="0 0 0 0" pageEffectDuration="1" pageViewDuration="1" effectType="0" Dm="0" M="0" Di="0"/>
-        <MASTEROBJECT XPOS="180" YPOS="748.747949200376" OwnPage="3" ItemID="1627415209" PTYPE="4" WIDTH="475.28" HEIGHT="20.4249831304508" FRTYPE="0" CLIPEDIT="0" PWIDTH="1" PLINEART="1" LOCALSCX="1" LOCALSCY="1" LOCALX="0" LOCALY="0" LOCALROT="0" PICART="1" SCALETYPE="1" RATIO="1" COLUMNS="1" COLGAP="0" AUTOTEXT="0" EXTRA="0" TEXTRA="0" BEXTRA="0" REXTRA="0" VAlign="0" FLOP="0" PLTSHOW="0" BASEOF="0" textPathType="0" textPathFlipped="0" path="M0 0 L475.28 0 L475.28 20.425 L0 20.425 L0 0 Z" copath="M0 0 L475.28 0 L475.28 20.425 L0 20.425 L0 0 Z" OnMasterPage="Seitenzahl links" gXpos="490282727.749833" gYpos="57690279767.5977" gWidth="0" gHeight="0" LAYER="0" NEXTITEM="-1" BACKITEM="-1">
+        <MASTEROBJECT XPOS="180" YPOS="748.747949200376" OwnPage="3" ItemID="1627415209" PTYPE="4" WIDTH="475.28" HEIGHT="20.4249831304508" FRTYPE="0" CLIPEDIT="0" PWIDTH="1" PLINEART="1" LOCALSCX="1" LOCALSCY="1" LOCALX="0" LOCALY="0" LOCALROT="0" PICART="1" SCALETYPE="1" RATIO="1" COLUMNS="1" COLGAP="0" AUTOTEXT="0" EXTRA="0" TEXTRA="0" BEXTRA="0" REXTRA="0" VAlign="0" FLOP="0" PLTSHOW="0" BASEOF="0" textPathType="0" textPathFlipped="0" path="M0 0 L475.28 0 L475.28 20.425 L0 20.425 L0 0 Z" copath="M0 0 L475.28 0 L475.28 20.425 L0 20.425 L0 0 Z" OnMasterPage="Seitenzahl links" gXpos="492447165.829729" gYpos="58145075731.935" gWidth="0" gHeight="0" LAYER="0" NEXTITEM="-1" BACKITEM="-1">
             <StoryText>
                 <DefaultStyle/>
                 <ITEXT CH="Seite "/>
@@ -238,7 +238,7 @@
                 <trail/>
             </StoryText>
         </MASTEROBJECT>
-        <MASTEROBJECT XPOS="140" YPOS="748.747949200376" OwnPage="2" ItemID="1627496569" PTYPE="4" WIDTH="475.28" HEIGHT="20.42498313" FRTYPE="0" CLIPEDIT="0" PWIDTH="1" PLINEART="1" LOCALSCX="1" LOCALSCY="1" LOCALX="0" LOCALY="0" LOCALROT="0" PICART="1" SCALETYPE="1" RATIO="1" COLUMNS="1" COLGAP="0" AUTOTEXT="0" EXTRA="0" TEXTRA="0" BEXTRA="0" REXTRA="0" VAlign="0" FLOP="0" PLTSHOW="0" BASEOF="0" textPathType="0" textPathFlipped="0" path="M0 0 L475.28 0 L475.28 20.425 L0 20.425 L0 0 Z" copath="M0 0 L475.28 0 L475.28 20.425 L0 20.425 L0 0 Z" OnMasterPage="Seitenzahl rechts" gXpos="1441050252.26413" gYpos="48580407217.1637" gWidth="0" gHeight="0" LAYER="0" NEXTITEM="-1" BACKITEM="-1">
+        <MASTEROBJECT XPOS="140" YPOS="748.747949200376" OwnPage="2" ItemID="1627496569" PTYPE="4" WIDTH="475.28" HEIGHT="20.42498313" FRTYPE="0" CLIPEDIT="0" PWIDTH="1" PLINEART="1" LOCALSCX="1" LOCALSCY="1" LOCALX="0" LOCALY="0" LOCALROT="0" PICART="1" SCALETYPE="1" RATIO="1" COLUMNS="1" COLGAP="0" AUTOTEXT="0" EXTRA="0" TEXTRA="0" BEXTRA="0" REXTRA="0" VAlign="0" FLOP="0" PLTSHOW="0" BASEOF="0" textPathType="0" textPathFlipped="0" path="M0 0 L475.28 0 L475.28 20.425 L0 20.425 L0 0 Z" copath="M0 0 L475.28 0 L475.28 20.425 L0 20.425 L0 0 Z" OnMasterPage="Seitenzahl rechts" gXpos="1448806155.38376" gYpos="48948626276.4209" gWidth="0" gHeight="0" LAYER="0" NEXTITEM="-1" BACKITEM="-1">
             <StoryText>
                 <DefaultStyle/>
                 <ITEXT CH="Seite "/>
@@ -6976,14 +6976,14 @@
                 <para PARENT="code"/>
                 <tab/>
                 <tab/>
-                <ITEXT CH="s_list = list(int i for s.split(&quot;.&quot;))"/>
+                <ITEXT CH="s_list = list(int(i) for i in s.split(&quot;.&quot;))"/>
                 <para PARENT="code"/>
                 <tab/>
                 <ITEXT CH="else:"/>
                 <para PARENT="code"/>
                 <tab/>
                 <tab/>
-                <ITEXT CH="s_list = list(int i for s.split(&quot;:&quot;))"/>
+                <ITEXT CH="s_list = list(int(i) for i in  s.split(&quot;:&quot;))"/>
                 <para PARENT="code"/>
                 <tab/>
                 <ITEXT CH="if len(s_list) == 4:"/>
@@ -6994,7 +6994,7 @@
                 <para PARENT="code"/>
                 <tab/>
                 <tab/>
-                <ITEXT CH="if s_list[0] == 2:"/>
+                <ITEXT CH="if len(str(s_list[0])) == 2:"/>
                 <para PARENT="code"/>
                 <tab/>
                 <tab/>
