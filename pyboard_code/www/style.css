@@ -92,7 +92,7 @@ body {
 }
 
 .rainbow-preloader {
-  z-index: 0;
+  z-index: -1;
   height: 90px;
   left: 50%;
   margin-left: -90px;
