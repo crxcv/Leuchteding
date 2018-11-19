@@ -1,93 +1,43 @@
-import machine, _thread, gc, utime
-
-#gc.enable()
-import connectSTA_AP, songs, animations
-import webSrv as srv
-
-# gets True when alarm is running, so the touch sensor will stop alarm instead of toggeling animations
-is_alarm_running = False
-is_light_on = False
-# for timing functions
-curr_ms = 0
-last_ms = 0
-last_ms_ldr = 0
-last_ms_alarm = 0
-ms_to_alarm = 0
-#gets true if new AlarmTime was set, to print seconds to is_alarm_running in terminal
-count_time = False
-
-wait_before_start_thread = 3000
-wait_after_stop_thread = 500
-#TODO: use constants for light_val
-last_light_val = 0
-alarm_light_val = 3
-light_val = 0
-lightAnim_thread = 0
-led_color = (245, 242, 22)
-#brightness_val = 0
-#old_brightness_val = 0
-alarm_song = "StarWars"
-music_thread = 0
+import machine, utime, _thread
+import wifi, animations, webSrv, songs
 
 # touch pins: 4, 0, 2, 15, 13, 12, 14, 27, 33, 32
-# value error on 0, 2. 4: 50%
-touchPin = 27
-ldr_pin = 36 #SVP Pin
+# value error on 0, 2. 13, 4: 50%
+touch_pin = 15
+touch = machine.TouchPad(machine.Pin(touch_pin))
+touch_val = 1000
+touch_threshold = 180
 
-ldr_val = 0
-last_ldr_val = 0
+# ldr specific values
+ldr_pin = 36
+ldr = machine.ADC(machine.Pin(ldr_pin))
 
-
-#light resistor configuration
-ldr = machine.ADC(machine.Pin(ldr_pin, machine.Pin.IN)) #SVP-Pin
-ldr_val = ldr.read()
-animations.set_brightness(ldr_val)
-
-
-#set to true to be able to get messages
+# thread specific values
 _thread.replAcceptMsg(True)
+animation_thread = 100
+wait_before_start_thread = 2000
 
-#blink once at startup to signalize that device has started and turn off all led
-_thread.stack_size(8*1024)
-lightAnim_thread= _thread.start_new_thread("lightThread", animations.thread, (3,))
+sound_thread = 100
+alarm_song = "Tetris"
 
-#connect to wifi or create access point
-connectSTA_AP.connect()
+# alarm-clock specific values
+rtc = machine.RTC()
+timer = machine.Timer(1)
 
-#create realTimeClock instance and synchronize with online clock if possible
-clock= machine.RTC()
-date = clock.now()
-timer = machine.Timer(0)
+# will become True if alarm is running so touch is used to disable alarm
+is_alarm_running = False
 
-def readTouchPin():
-    touchv = 1
-    try:
-        touchv = touch.read()
-    except ValueError:
-        handleMusicThread("Fail")
-        print("TouchPad read error")
-    return touchv
-
-#touch sensor configuration
-touch = machine.TouchPad(machine.Pin(touchPin))
-#touch.config(600)
-touchThreshold = readTouchPin() #touch.read()#sum(thresholdLight)//len(thresholdLight)
-
-#interruptHandler for touch pin
-# def touchLightCallback(touch):
-#     global light_val
-#     global touchThreshold
-#     light_val = light_val +1
-
+# blink once to signalize that system's up
+animations.blink(count = 2, time_on=50)
 
 def handleAnimations(animation_name=None):
-    '''stops current running light animation and starts new one with given value
-    '''
-    try:
-        if _thread.status(animation_thread) != _thread.TERMINATED:
-            _thread.notify(animation_thread, _thread.EXIT)
-    except NameError:
-        pass
+    """ stopps running animation thread and creates a new thread.
+    If animation_name is given, it creates a thread with animations.start(animation_name)
+    if animation_name == None it creates a thread with animations.next()
+    animation_name: (String) name of the animation to start
+    """
+    global animation_thread
+    _thread.notify(0, _thread.EXIT)
 
     if animation_name == None:
         utime.sleep_ms(50)
@@ -97,184 +47,132 @@ def handleAnimations(animation_name=None):
         utime.sleep_ms(wait_before_start_thread)
         animation_thread = _thread.start_new_thread("animation", animations.start, (animation_name,))
 
-def handleMusicThread(val):
-    '''stops current musicThread if runing and starts a new one with given value
-    '''
-    global music_thread
-    if _thread.status(music_thread) != _thread.TERMINATED:
-        print("stopping musicThread")
-        _thread.notify(music_thread, _thread.EXIT)
-        utime.sleep_ms(wait_after_stop_thread)
+def handleSoundThread(song):
+    """ stopps running sound thread and starts a new thread with value saved in 'song'
+    song: (String) name of the song to start
+    """
+    global sound_thread
 
-    _thread.wait(wait_before_start_thread)
-    music_thread = _thread.start_new_thread("musicThread", songs.find_song, (val,))
-    #utime.sleep_ms(500)
+    _thread.notify(sound_thread, _thread.EXIT)
+    utime.sleep_ms(wait_before_start_thread)
+    sound_thread = _thread.start_new_thread("song", songs.find_song, (song,))
 
-# handler for alarm timer. if time's up, music_thread starts
-# is_alarm_running is set to True so main loop lets the LEDs blink
-def _handleTimer(timer):
-    '''timerhandler to start thread(s) if alarm_time is now
-    '''
-    global count_time
-    global is_alarm_running
-    global last_ms_alarm
-    print("ALARM!")
-    is_alarm_running = True
-    count_time = False
-    last_ms_alarm = utime.ticks_ms()
-    handleMusicThread(alarm_song)
-    #handleLightThread(light_val)
-
-def setAlarmTime(h, m):
-    '''
-    calculates millis to next is_alarm_running and creates timer instance
-    '''
-    print("setting is_alarm_running time ")
-    global count_time
-
-    count_time = True
-    secondsPerDay = 86400
-    secondsPerHour = 3600
-    secondsPerMin = 60
-    msPerSec = 1000
-
-    #get actual time as touple
-    currTime_touple = utime.localtime()
-    #convert tuple to sec
-    currTime_sec = utime.mktime(currTime_touple)
-    print("utime.mktime(currentTouple): {}".format(currTime_sec))
-    #touple:
-    #0: year    1: month 2: mday 3: hour 4: min 5: sec 6: weekday 7: yearday
-    #replace values of current time with hour and min from is_alarm_running time & get seconds to this time
-    alarm_touple = ()
-    alarm_touple = (currTime_touple[0], currTime_touple[1],currTime_touple[2], h, m,  currTime_touple[5], currTime_touple[6], currTime_touple[7])
-    alarm_sec= utime.mktime(alarm_touple)
-    print("alarm_sec:{}".format(alarm_sec))
-
-    #check if alarm_time is on this day or not
-    #substract alarm_sec from currTime_sec. if result equals or is more than 0,
-    # is_alarm_running must be now or in the past so we need to add secondsPerDay
-    alarm_sec = currTime_sec - alarm_sec
-    #print("currTime_sec - alarm_sec: {} ".format(alarm_sec))
-
-    if alarm_sec >= 0:
-        alarm_sec = alarm_sec + secondsPerDay
-        print("alarm_sec >= 0: {}".format(alarm_sec))
+def convertDateOrTimeToTuple(s):
+    """ splits given String by '.' or ':'. If resulting List has len = 4 it is
+    interpreted as date and will be converted in (yyyy, mm, dd). if value for year
+    has two digits, 2000 is added.
+    s: string in format hh:mm or dd.mm.yy(yy)
+    return: Tuple (hh, mm) or (yyyy, mm, dd)
+    """
+    if s.find(".") >= 0:
+        s_list = list(int(i) for i in  s.split("."))
     else:
-        alarm_sec = alarm_sec *-1
-        print("alarm_sec < 0: {}".format(alarm_sec))
-    #calculate ms from sec
-    alarm_ms = int(alarm_sec * msPerSec)
-    print("ms to alarm: {}".format(alarm_ms))
+        s_list = list(int(i) for i in s.split(":"))
+    print("converted: {}".format(s_list))
+    if len(s_list) == 3:
+        s_list.reverse()
+        print("reversed: {}".format(s_list))
+        if len(str(s_list[0])) == 2:
+            s_list[0] += 2000
 
-    #initialize timer
-    timer.init(period=alarm_ms, mode= timer.ONE_SHOT, callback= _handleTimer )
+    return tuple(s_list)
 
-    return alarm_ms
 
-#start server in thread
-srv_thread = srv.start()
-animations.blink(1)
+def setSystemTime(date, time):
+    """converts date and time (String) in integer values and sets system time
+    date: date as String (dd.mm.yy)
+    time: time as String (hh:mm)
+    """
+    #date = convertDateOrTimeToTuple(date)
+    #time = convertDateOrTimeToTuple(time)
+    if date.find(":") >= 0:
+        date_list = list(int(i) for i in  date.split(":"))
+    else:
+        date_list = list(int(i) for i in date.split("."))
+    date_list.reverse()
+    print("reversed: {}".format(date_list))
+    if len(str(date_list[0])) == 2:
+        date_list[0] += 2000
+    date = tuple(date_list)
+
+    if time.find(".") >= 0:
+        time = tuple(int(i) for i in  time.split("."))
+    else:
+        time = tuple(int(i) for i in time.split(":"))
+
+    print("initializing time: {}".format(date+time))
+    rtc.init(date+time)
+
+
+def _timer_callback(timer):
+    """ Timer callback function to start playing alarm_song
+    and start "blink" animation
+    timer: according timer
+    """
+    global is_alarm_running
+    handleSoundThread(alarm_song)
+    handleAnimations("blink")
+    is_alarm_running = True
+
+def setAlarmTime(time):
+    """ calculates period to alarm from given time + system time
+    time: time as String (hh:mm) when alarm should run
+    """
+    seconds_per_day =  60 * 60 * 24
+    time = convertDateOrTimeToTuple(time)
+
+    curr_time_toup = utime.localtime()
+    curr_time_sec = utime.mktime(curr_time_toup)
+
+    alarm_time_sec = utime.mktime(curr_time_toup[0:3] + time + curr_time_toup[5:])
+
+    period_sec = alarm_time_sec - curr_time_sec
+    if period_sec < 0:
+        period_sec += seconds_per_day
+
+    timer.init(period = period_sec*1000, mode = timer.ONE_SHOT, callback= _timer_callback )
 
 while True:
-    touchval = readTouchPin()
-    # TODO: this one makes no sense:
-    #read the touch sensor and check if it was touched
-    #touchLightRatio = touchval / touchThreshold
-    if touchval < 100:
-        print("touched! touchLightRatio: {}".format(touchval))
+    # read touch pin
+    try:
+        touch_val = touch.read()
+    except ValueError:
+        # if ValueError occures print on terminal and blink 3 times in red
+        print("ValueError while reading touch_pin")
+        animations.blink(color=0xff0000, count=3, time_on=50, time_off=50)
 
-        #if is_alarm_running is set to True it means is_alarm_running is currently running
-        #touchSensor disables is_alarm_running
-        #IMPORTANT!!! add snooze function by counting how many seconds sensor was touched
+    # if touch is registered
+    if touch_val < touch_threshold:
         if is_alarm_running:
-            print("aborting alarm")
-            handleLightThread(0)
-            handleMusicThread(0)
-            timer.deinit()
+            # if alarm is running stop sound and animation thread,
+            # set is_alarm_running to False
+            handleSoundThread("")
             is_alarm_running = False
-
-        # if no alarm is currently running,
-        # increase light_val by one to toggle through lightAnimations
         else:
+                # if no alarm is running print output and start function
+                # handleAnimations() without argument to start next animation
             print("touched!! value: {}".format(touch_val))
             handleAnimations()
 
-    # check if lightAnim was set on website. returns "None" if none was set
-    # light = srv.getLight()
+    # read threadMessage from microWebSrv
     msg = _thread.getmsg()
-    if (msg[0] == 2 and msg[1] == srv_thread):
-        values = msg[2].split(":")
-        if values[0] is "light":
-        # if light is not "None":
-            print("light changed by webserver: {}".format(values[1]))
-            handleAnimations(animation_name = values[1])
+    # check if message is String
+    if msg[0] == 2:
+        # convert String in dictionary
+        values_dict = eval(msg[2])
 
-        #check if a new song was set on website, gets "None" if not
-        elif values[0] is "song":
-            alarm_song = values[1]
-            print("song set to: {}".format(alarm_song))
-            handleMusicThread(alarm_song)
+        # call function according to value of "button"
+        if values_dict["button"] == "light":
+            handleAnimations(animation_name = values_dict["light"])
+        elif values_dict["button"] == "sound":
+            alarm_song = values_dict["sound"]
+            handleSoundThread(values_dict["sound"])
+        elif values_dict["button"] == "datetime":
+            setSystemTime(values_dict["date"], values_dict["time"])
+        elif values_dict["button"] == "alarm":
+            setAlarmTime(values_dict["alarm"])
 
-        #check if systemTime was set on website
-        elif values[0] is "time":
-            date = tuple(map(int, values[1][1:-1].split(',')))
-            _thread.wait(300)
-            clock.init(date)
-            print("initialized new time: {}".format(date))
-
-        #check if alarm_time was set on website
-        elif values[0] is "alarm":
-            new_alarm = tuple(map(int, values[1][1:-1].split(',')))
-            _thread.wait(300)
-            ms_to_alarm = setAlarmTime(int(new_alarm[0]), int(new_alarm[1]))
-
-        #check if LED colors were set on website
-        elif values[0] is "colors":
-            led_color = tuple(map(int, values[1][1:-1].split(',')))
-            #print("new color from srv: {}".format(led_color))
-            _thread.wait(300)
-            animations.setAll(led_color[0], led_color[1], led_color[2], 255)
-
-
-    #check if light_val has changed to know if new lightAnim should be started
-    if light_val is not last_light_val:
-        print("light_val changed: {}".format(light_val))
-        last_light_val = light_val
-        handleLightThread(light_val)
-        #utime.sleep_ms(1000)
-
-    #get current systemTime in milliseconds
-    curr_ms = utime.ticks_ms()
-    #execute containing code only once per second
-    if utime.ticks_diff(utime.ticks_ms(), last_ms) >=1000:
-        last_ms = utime.ticks_ms()
-        #show countdown to is_alarm_running on terminal
-        if count_time:
-            print("{} seconds to alarm".format(int(ms_to_alarm/1000)))
-            ms_to_alarm = ms_to_alarm -1000
-
-
-    # read light resistor once per minute and set brightness of led according to value
-    curr_ms = utime.ticks_ms()
-    if utime.ticks_diff(utime.ticks_ms(), last_ms_ldr) >= (1000 * 60):
-        last_ms_ldr = curr_ms
-        ldr_val = ldr.read()
-        animations.set_brightness(ldr_val)
-
-    # if is_alarm_running is running let the LEDs blink twice per second
-    if is_alarm_running:
-        curr_ms = utime.ticks_ms
-        if utime.ticks_diff(utime.ticks_ms(), last_ms_alarm) >500:
-            if is_light_on:
-                animations.off()
-                is_light_on = False
-            else:
-                animations.setAll(led_color[0], led_color[1], led_color[2], 255)
-                is_light_on = True
-            last_ms_alarm = utime.ticks_ms()
-        if _thread.status(music_thread) == _thread.TERMINATED:
-            _thread.start_new_thread("musicThread", songs.find_song(alarm_song))
-
-
-    utime.sleep_ms(150)
+    # read value of ldr, map to value range of brightness and set brightness of LED Strip
+    animations.set_brightness(int(ldr.read() / 1100 * 255))
+    # sleep to avoid system crash
+    utime.sleep_ms(200)
