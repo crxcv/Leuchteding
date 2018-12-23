@@ -1,5 +1,10 @@
-import machine, utime, _thread
-import wifi, animations, webSrv, songs
+import machine
+import utime
+import _thread
+import wifi
+import animations
+import webSrv
+import songs
 
 # touch pins: 4, 0, 2, 15, 13, 12, 14, 27, 33, 32
 # value error on 0, 2. 13, 4: 50%
@@ -28,27 +33,38 @@ timer = machine.Timer(1)
 is_alarm_running = False
 
 # blink once to signalize that system's up
-animations.blink(count = 2, time_on=50)
+animations.blink(count=2, time_on=50)
+
 
 def handleAnimations(animation_name=None):
     """ stopps running animation thread and creates a new thread.
-    If animation_name is given, it creates a thread with animations.start(animation_name)
-    if animation_name == None it creates a thread with animations.next()
+    If animation_name is given, it creates a thread with
+    animations.start(animation_name) if animation_name == None it creates a
+    thread with animations.next()
+
     animation_name: (String) name of the animation to start
     """
     global animation_thread
     _thread.notify(0, _thread.EXIT)
 
-    if animation_name == None:
+    if animation_name is None:
         utime.sleep_ms(50)
-        animation_thread = _thread.start_new_thread("animation", animations.next, () )
+        animation_thread = _thread.start_new_thread("animation",
+                                                    animations.next, ()
+                                                    )
     else:
         print("starting animation {}".format(animation_name))
         utime.sleep_ms(wait_before_start_thread)
-        animation_thread = _thread.start_new_thread("animation", animations.start, (animation_name,))
+        animation_thread = _thread.start_new_thread("animation",
+                                                    animations.start,
+                                                    (animation_name,)
+                                                    )
+
 
 def handleSoundThread(song):
-    """ stopps running sound thread and starts a new thread with value saved in 'song'
+    """ stopps running sound thread and starts a new thread with value saved in
+    'song'
+
     song: (String) name of the song to start
     """
     global sound_thread
@@ -57,15 +73,17 @@ def handleSoundThread(song):
     utime.sleep_ms(wait_before_start_thread)
     sound_thread = _thread.start_new_thread("song", songs.find_song, (song,))
 
+
 def convertDateOrTimeToTuple(s):
     """ splits given String by '.' or ':'. If resulting List has len = 4 it is
-    interpreted as date and will be converted in (yyyy, mm, dd). if value for year
-    has two digits, 2000 is added.
+    interpreted as date and will be converted in (yyyy, mm, dd). if value for
+    year has two digits, 2000 is added.
+
     s: string in format hh:mm or dd.mm.yy(yy)
     return: Tuple (hh, mm) or (yyyy, mm, dd)
     """
     if s.find(".") >= 0:
-        s_list = list(int(i) for i in  s.split("."))
+        s_list = list(int(i) for i in s.split("."))
     else:
         s_list = list(int(i) for i in s.split(":"))
     print("converted: {}".format(s_list))
@@ -83,10 +101,10 @@ def setSystemTime(date, time):
     date: date as String (dd.mm.yy)
     time: time as String (hh:mm)
     """
-    #date = convertDateOrTimeToTuple(date)
-    #time = convertDateOrTimeToTuple(time)
+    # date = convertDateOrTimeToTuple(date)
+    # time = convertDateOrTimeToTuple(time)
     if date.find(":") >= 0:
-        date_list = list(int(i) for i in  date.split(":"))
+        date_list = list(int(i) for i in date.split(":"))
     else:
         date_list = list(int(i) for i in date.split("."))
     date_list.reverse()
@@ -96,7 +114,7 @@ def setSystemTime(date, time):
     date = tuple(date_list)
 
     if time.find(".") >= 0:
-        time = tuple(int(i) for i in  time.split("."))
+        time = tuple(int(i) for i in time.split("."))
     else:
         time = tuple(int(i) for i in time.split(":"))
 
@@ -114,23 +132,29 @@ def _timer_callback(timer):
     handleAnimations("blink")
     is_alarm_running = True
 
+
 def setAlarmTime(time):
     """ calculates period to alarm from given time + system time
     time: time as String (hh:mm) when alarm should run
     """
-    seconds_per_day =  60 * 60 * 24
+    seconds_per_day = 60 * 60 * 24
     time = convertDateOrTimeToTuple(time)
 
     curr_time_toup = utime.localtime()
     curr_time_sec = utime.mktime(curr_time_toup)
 
-    alarm_time_sec = utime.mktime(curr_time_toup[0:3] + time + curr_time_toup[5:])
+    alarm_time_sec = utime.mktime(curr_time_toup[0:3] + time
+                                  + curr_time_toup[5:])
 
     period_sec = alarm_time_sec - curr_time_sec
     if period_sec < 0:
         period_sec += seconds_per_day
 
-    timer.init(period = period_sec*1000, mode = timer.ONE_SHOT, callback= _timer_callback )
+    timer.init(period=period_sec*1000,
+               mode=timer.ONE_SHOT,
+               callback=_timer_callback
+               )
+
 
 while True:
     # read touch pin
@@ -163,7 +187,7 @@ while True:
 
         # call function according to value of "button"
         if values_dict["button"] == "light":
-            handleAnimations(animation_name = values_dict["light"])
+            handleAnimations(animation_name=values_dict["light"])
         elif values_dict["button"] == "sound":
             alarm_song = values_dict["sound"]
             handleSoundThread(values_dict["sound"])
@@ -172,7 +196,8 @@ while True:
         elif values_dict["button"] == "alarm":
             setAlarmTime(values_dict["alarm"])
 
-    # read value of ldr, map to value range of brightness and set brightness of LED Strip
+    # read value of ldr, map to value range of brightness and set brightness of
+    # LED Strip
     animations.set_brightness(int(ldr.read() / 1100 * 255))
     # sleep to avoid system crash
     utime.sleep_ms(200)
