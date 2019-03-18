@@ -13,7 +13,7 @@ datetime = utime.localtime()
 @MicroWebSrv.route('/')
 def _httpHandlerPost(httpClient, httpResponse) :
 
-    # get system time and save it t datetime_dict
+    # get system time and save it to datetime_dict
     datetime = utime.localtime()
     datetime_dict = { "year" : datetime[0], "month" : datetime[1], "mday" : datetime[2],
                     "hour": datetime[3], "minute" : datetime[4], "second" : datetime[5],
@@ -37,7 +37,7 @@ def _httpHandlerPost(httpClient, httpResponse) :
         message = str(formData)
         _thread.sendmsg(_thread.getReplID(), message)
 
-    # get system time and save it t datetime_dict
+    # get system time and save it to datetime_dict
     datetime = utime.localtime()
     #print(datetime)
     datetime_dict = { "year" : datetime[0], "month" : datetime[1], "mday" : datetime[2],
