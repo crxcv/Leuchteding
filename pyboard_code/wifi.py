@@ -48,7 +48,6 @@ for nets in networks:
             print("\n======== STA NOT CONNECTED ========\n")
 
 
-
 try:
     mdns = network.mDNS()
     mdns.start(hostname, "MicroPython with mDNS")
