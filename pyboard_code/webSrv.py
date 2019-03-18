@@ -7,10 +7,6 @@ file = open("www/index.html")
 htmlSite = file.read()
 file.close()
 
-f2 = open("www/alarm.html")
-alarmSite = f2.read()
-f2.close()
-
 datetime = utime.localtime()
 
 # route handler for index.html with method GET
